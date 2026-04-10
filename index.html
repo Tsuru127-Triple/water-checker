@@ -303,13 +303,11 @@ function render() {
     const isUndo = !!undoMap[p.id];
     const dateBadge = dateStr
       ? `<span class="badge badge-date">💧 ${dateStr}</span>`
-      : `<span class="badge badge-none">未記録</span>`;
+      : '';
     const dayBadge = d !== null
       ? `<span class="badge badge-days">${d === 0 ? '今日' : d + '日前'}</span>`
       : '';
-    const undoBadge = isUndo
-      ? `<span class="badge badge-undo">↩ タップで取消</span>`
-      : '';
+    const undoBadge = '';
     const imgContent = p.img
       ? `<img src="${p.img}" alt="${p.name}">`
       : `<span>🌿</span>`;
