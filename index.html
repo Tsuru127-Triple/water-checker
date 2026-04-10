@@ -3,228 +3,452 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>水やりチェッカー</title>
+<title>Water</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-    background: #f5f7f2;
-    color: #2c3a1e;
-    min-height: 100vh;
-  }
-  .app { max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  .header {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(245,247,242,0.92);
-    backdrop-filter: blur(8px);
-    padding: 16px 16px 12px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid #dde8d0;
-  }
-  .header h1 { font-size: 20px; font-weight: 700; color: #2c3a1e; letter-spacing: -0.3px; }
-  .header-btns { display: flex; gap: 8px; }
-  .btn {
-    font-size: 13px; font-weight: 600;
-    padding: 7px 16px;
-    border-radius: 20px;
-    border: 1.5px solid #b8d4a0;
-    background: #fff;
-    color: #3d6b22;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn:active { transform: scale(0.96); }
-  .btn.edit-active { background: #c8e6a8; border-color: #7db85a; color: #2c5a10; }
-  .btn.add-btn { background: #4a8f2a; border-color: #4a8f2a; color: #fff; }
-  .btn.add-btn:active { background: #3a7020; }
+body {
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  background: #ffffff;
+  color: #1a1a1a;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .plant-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
-  .empty-msg {
-    text-align: center; padding: 48px 24px;
-    color: #8fa87a; font-size: 14px; line-height: 1.7;
-  }
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+/* ===== 背景 ===== */
+#bgLayer {
+  position: fixed; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  pointer-events: none;
+}
 
-  .plant-card {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px;
-    border-radius: 16px;
-    border: 1.5px solid #dde8d0;
-    background: #eef6e4;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, transform 0.1s;
-    position: relative;
-    -webkit-user-select: none; user-select: none;
-    overflow: hidden;
-  }
-  .plant-card:active { transform: scale(0.98); }
-  .plant-card.watered { background: #dff2ec; border-color: #a0d9c8; }
-  .plant-card.edit-mode { border: 2px dashed #7db85a; background: #f0f8e8; }
+/* ===== ページ切り替え ===== */
+.page {
+  position: relative; z-index: 1;
+  max-width: 480px; margin: 0 auto;
+  min-height: 100vh;
+  display: none;
+  padding-bottom: 40px;
+}
+.page.active { display: block; }
 
-  /* 取消カウントダウンバー */
-  .undo-bar {
-    position: absolute; bottom: 0; left: 0;
-    height: 3px; background: #4a8f2a;
-    border-radius: 0 0 0 16px;
-    transition: width linear;
-  }
+/* ===== 共通ヘッダー ===== */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  padding: 16px 16px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-title {
+  font-size: 22px; font-weight: 800;
+  letter-spacing: -0.5px; color: #1a1a1a;
+}
+.header-btns { display: flex; gap: 8px; align-items: center; }
 
-  .plant-img {
-    width: 72px; height: 72px; flex-shrink: 0;
-    border-radius: 12px;
-    background: #d8ecc8;
-    border: 1px solid #c0d8a8;
-    overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px;
-  }
-  .plant-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* ===== ボタン共通 ===== */
+.btn {
+  font-size: 13px; font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #ccc;
+  background: rgba(255,255,255,0.9);
+  color: #333;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.96); }
+.btn.green { background: #406843; border-color: #406843; color: #fff; }
+.btn.green:active { background: #2f4f32; }
+.btn.edit-active { background: #e8f5e0; border-color: #406843; color: #406843; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer;
+  transition: background 0.15s;
+}
+.icon-btn:active { background: #eee; transform: scale(0.93); }
 
-  .plant-info { flex: 1; min-width: 0; }
-  .plant-name {
-    font-size: 16px; font-weight: 700; color: #2c3a1e;
-    margin-bottom: 8px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .plant-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .badge {
-    font-size: 12px; font-weight: 600;
-    padding: 4px 10px; border-radius: 20px;
-    white-space: nowrap;
-  }
-  .badge-date { background: #a0d9c8; color: #0d5e4a; }
-  .badge-days { background: #c8e6a8; color: #2c5a10; }
-  .badge-none { background: #e8eedf; color: #7a9860; }
-  .badge-undo { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+/* ===== トップページ ===== */
+/* 天気エリア */
+.weather-section {
+  padding: 16px 16px 8px;
+}
+.weather-location {
+  font-size: 13px; color: #666; margin-bottom: 4px;
+}
+.weather-temp-big {
+  font-size: 72px; font-weight: 800;
+  line-height: 1; letter-spacing: -3px;
+  color: #1a1a1a; margin-bottom: 12px;
+}
+.weather-temp-big span { font-size: 48px; }
 
-  .delete-btn {
-    position: absolute; top: 8px; right: 8px;
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    background: #ffdddd; color: #c0392b;
-    border: none; cursor: pointer;
-    font-size: 16px; font-weight: 700;
-    display: none;
-    align-items: center; justify-content: center;
-    line-height: 1;
-  }
-  .edit-mode .delete-btn { display: flex; }
+/* 週カレンダー */
+.week-calendar {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 4px; margin-bottom: 4px;
+}
+.day-col {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 4px;
+  border-radius: 14px;
+  border: 1px solid #e8e8e8;
+  background: rgba(255,255,255,0.7);
+  gap: 3px;
+}
+.day-col.today {
+  background: #1a1a1a; border-color: #1a1a1a;
+}
+.day-col .day-name {
+  font-size: 10px; font-weight: 600; color: #888;
+}
+.day-col.today .day-name { color: #aaa; }
+.day-col .day-hi {
+  font-size: 12px; font-weight: 700; color: #1a1a1a;
+}
+.day-col.today .day-hi { color: #fff; }
+.day-col .day-lo {
+  font-size: 10px; color: #888;
+}
+.day-col.today .day-lo { color: #aaa; }
+.day-col .day-icon { font-size: 14px; }
 
-  .edit-hint {
-    text-align: center; font-size: 12px; color: #8fa87a;
-    padding: 8px 0 0;
-  }
+/* フォルダセクション */
+.folder-section { padding: 16px 16px 0; }
+.folder-section-title {
+  font-size: 13px; font-weight: 600; color: #888;
+  margin-bottom: 10px; letter-spacing: 0.3px;
+}
+.folder-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.folder-btn {
+  aspect-ratio: 1/1;
+  border-radius: 18px;
+  border: none;
+  background: #406843;
+  color: #fff;
+  font-size: 16px; font-weight: 700;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: flex-end;
+  padding: 14px;
+  position: relative; overflow: hidden;
+  transition: transform 0.15s, filter 0.15s;
+  -webkit-user-select: none; user-select: none;
+  text-align: left;
+}
+.folder-btn:active { transform: scale(0.97); }
+.folder-btn.pressing {
+  filter: brightness(1.2);
+}
+.folder-btn .folder-name { font-size: 15px; font-weight: 700; line-height: 1.2; }
+.folder-btn .folder-count { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+.folder-btn .folder-press-bar {
+  position: absolute; bottom: 0; left: 0;
+  height: 4px; background: rgba(255,255,255,0.6);
+  border-radius: 0 0 0 18px;
+  width: 0%; transition: none;
+}
+.folder-add-btn {
+  aspect-ratio: 1/1;
+  border-radius: 18px;
+  border: 2px dashed #ccc;
+  background: rgba(240,240,240,0.6);
+  color: #aaa;
+  font-size: 28px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.folder-add-btn:active { background: #e8e8e8; }
 
-  /* モーダル共通 */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: none; align-items: flex-end; justify-content: center;
-    z-index: 200;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: #fff;
-    border-radius: 24px 24px 0 0;
-    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-    width: 100%; max-width: 480px;
-    max-height: 90vh; overflow-y: auto;
-  }
-  .modal-handle {
-    width: 36px; height: 4px; border-radius: 2px;
-    background: #ddd; margin: 0 auto 16px;
-  }
-  .modal h2 { font-size: 17px; font-weight: 700; color: #2c3a1e; margin-bottom: 16px; }
-  .modal label { font-size: 13px; color: #6a8a50; font-weight: 600; display: block; margin: 14px 0 6px; }
-  .modal input[type="text"] {
-    width: 100%; font-size: 16px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    border: 1.5px solid #c8d8b8;
-    background: #f8fdf4;
-    color: #2c3a1e;
-    outline: none;
-  }
-  .modal input[type="text"]:focus { border-color: #7db85a; }
+/* ===== フォルダページ ===== */
+.plant-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+.empty-msg {
+  text-align: center; padding: 48px 24px;
+  color: #aaa; font-size: 14px; line-height: 1.8;
+}
+.plant-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  background: #406843;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  position: relative;
+  -webkit-user-select: none; user-select: none;
+  overflow: hidden;
+}
+.plant-card:active { transform: scale(0.98); }
+.plant-card.watered { background: #73bfe6; }
+.plant-card.edit-mode { outline: 2px dashed rgba(255,255,255,0.6); }
 
-  /* 画像アップロードエリア */
-  .img-upload-area {
-    width: 140px; height: 140px;
-    border: 2px dashed #b8d4a0;
-    border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; overflow: hidden;
-    background: #f0f8e8;
-    margin: 6px 0;
-    position: relative;
-  }
-  .img-upload-area img { width: 100%; height: 100%; object-fit: cover; }
-  .img-upload-area span { font-size: 12px; color: #8fa87a; text-align: center; padding: 12px; line-height: 1.5; }
+.undo-bar {
+  position: absolute; bottom: 0; left: 0;
+  height: 3px; background: rgba(255,255,255,0.7);
+  border-radius: 0 0 0 16px;
+}
 
-  /* 画像削除ボタン */
-  .img-delete-btn {
-    position: absolute; top: 6px; right: 6px;
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.55); color: #fff;
-    border: none; cursor: pointer;
-    font-size: 14px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    line-height: 1; z-index: 10;
-  }
+.plant-img {
+  width: 72px; height: 72px; flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+}
+.plant-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-  .modal-actions .btn { flex: 1; text-align: center; border-radius: 12px; padding: 12px; font-size: 15px; }
-  .btn-save { background: #4a8f2a; border-color: #4a8f2a; color: #fff; }
-  .btn-save:active { background: #3a7020; }
-  .btn-cancel2 { background: #f0f0f0; border-color: #ddd; color: #666; }
+.plant-info { flex: 1; min-width: 0; }
+.plant-name {
+  font-size: 16px; font-weight: 700; color: #fff;
+  margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.plant-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.badge {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 9px; border-radius: 20px;
+  white-space: nowrap;
+  background: rgba(255,255,255,0.25); color: #fff;
+}
 
-  /* クロップモーダル */
-  .crop-modal {
-    background: #fff;
-    border-radius: 24px 24px 0 0;
-    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-    width: 100%; max-width: 480px;
-  }
-  .crop-canvas-wrap {
-    width: 100%; aspect-ratio: 1/1;
-    overflow: hidden; border-radius: 14px;
-    background: #222; cursor: grab;
-    touch-action: none; position: relative;
-  }
-  .crop-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
-  .crop-hint { font-size: 12px; color: #8fa87a; text-align: center; margin-top: 8px; }
+.delete-btn {
+  position: absolute; top: 8px; right: 8px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.3); color: #fff;
+  border: none; cursor: pointer;
+  font-size: 16px; font-weight: 700;
+  display: none;
+  align-items: center; justify-content: center;
+  line-height: 1;
+}
+.edit-mode .delete-btn { display: flex; }
+.edit-hint {
+  text-align: center; font-size: 12px; color: #aaa;
+  padding: 8px 0 0;
+}
 
-  @keyframes ripple {
-    0% { transform: scale(0.95); opacity: 1; }
-    100% { transform: scale(1.02); opacity: 0; }
-  }
-  .rippling::after {
-    content: ''; position: absolute; inset: 0;
-    border-radius: 16px;
-    border: 2px solid #4a8f2a;
-    animation: ripple 0.4s ease-out forwards;
-    pointer-events: none;
-  }
+/* ===== 設定ページ ===== */
+.settings-section { padding: 16px; }
+.settings-label {
+  font-size: 13px; font-weight: 600; color: #888;
+  margin-bottom: 8px; margin-top: 20px;
+}
+.settings-label:first-child { margin-top: 0; }
+.settings-input {
+  width: 100%; font-size: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid #e0e0e0;
+  background: #fafafa;
+  color: #1a1a1a; outline: none;
+}
+.settings-input:focus { border-color: #406843; }
+.bg-upload-area {
+  width: 100%; height: 120px;
+  border: 2px dashed #ccc;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden;
+  background: #fafafa;
+  position: relative;
+}
+.bg-upload-area img { width: 100%; height: 100%; object-fit: cover; }
+.bg-upload-area span { font-size: 13px; color: #aaa; }
+.bg-delete-btn {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,0.5); color: #fff;
+  border: none; border-radius: 50%;
+  width: 26px; height: 26px;
+  font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.settings-save-btn {
+  width: 100%; margin-top: 24px;
+  padding: 14px; border-radius: 14px;
+  background: #406843; border: none;
+  color: #fff; font-size: 16px; font-weight: 700;
+  cursor: pointer;
+}
+.settings-save-btn:active { background: #2f4f32; }
+.settings-danger-btn {
+  width: 100%; margin-top: 10px;
+  padding: 12px; border-radius: 14px;
+  background: #fff; border: 1.5px solid #ffaaaa;
+  color: #c0392b; font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== モーダル共通 ===== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none; align-items: flex-end; justify-content: center;
+  z-index: 300;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+  width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: #ddd; margin: 0 auto 16px;
+}
+.modal h2 { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 16px; }
+.modal label { font-size: 13px; color: #406843; font-weight: 600; display: block; margin: 14px 0 6px; }
+.modal input[type="text"] {
+  width: 100%; font-size: 16px;
+  padding: 10px 14px; border-radius: 12px;
+  border: 1.5px solid #ddd; background: #fafafa;
+  color: #1a1a1a; outline: none;
+}
+.modal input[type="text"]:focus { border-color: #406843; }
+.img-upload-area {
+  width: 140px; height: 140px;
+  border: 2px dashed #ccc; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden; background: #fafafa;
+  margin: 6px 0; position: relative;
+}
+.img-upload-area img { width: 100%; height: 100%; object-fit: cover; }
+.img-upload-area span { font-size: 12px; color: #aaa; text-align: center; padding: 12px; line-height: 1.5; }
+.img-delete-btn {
+  position: absolute; top: 6px; right: 6px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); color: #fff;
+  border: none; cursor: pointer; font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-actions .btn { flex: 1; text-align: center; border-radius: 12px; padding: 12px; font-size: 15px; }
+.btn-cancel2 { background: #f0f0f0; border-color: #ddd; color: #666; }
+
+/* クロップ */
+.crop-modal {
+  background: #fff; border-radius: 24px 24px 0 0;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  width: 100%; max-width: 480px;
+}
+.crop-canvas-wrap {
+  width: 100%; aspect-ratio: 1/1;
+  overflow: hidden; border-radius: 14px;
+  background: #222; cursor: grab; touch-action: none;
+}
+.crop-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+.crop-hint { font-size: 12px; color: #aaa; text-align: center; margin-top: 8px; }
+
+/* フォルダ編集モーダル */
+.folder-modal-colors {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;
+}
+.color-swatch {
+  width: 32px; height: 32px; border-radius: 50%;
+  cursor: pointer; border: 3px solid transparent;
+  transition: border-color 0.15s;
+}
+.color-swatch.selected { border-color: #1a1a1a; }
+
+@keyframes ripple {
+  0% { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1.02); opacity: 0; }
+}
+.rippling::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,0.8);
+  animation: ripple 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+/* 一括水やり確認トースト */
+.toast {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  background: #1a1a1a; color: #fff;
+  padding: 12px 20px; border-radius: 20px;
+  font-size: 14px; font-weight: 600;
+  z-index: 500; opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<div class="app">
+<div id="bgLayer"></div>
+<div id="toast" class="toast"></div>
+
+<!-- ===== トップページ ===== -->
+<div id="pageTop" class="page active">
   <div class="header">
-    <h1>🌿 水やりチェッカー</h1>
+    <div class="header-title">Water</div>
+    <div class="header-btns">
+      <button class="icon-btn" onclick="goSettings()" title="設定">⚙️</button>
+    </div>
+  </div>
+
+  <div class="weather-section">
+    <div class="weather-location" id="weatherLocation">読み込み中...</div>
+    <div class="weather-temp-big" id="weatherTempBig">--<span>°</span></div>
+    <div class="week-calendar" id="weekCalendar">
+      <div style="grid-column:1/-1;text-align:center;color:#aaa;font-size:12px;padding:16px 0">天気を読み込み中...</div>
+    </div>
+  </div>
+
+  <div class="folder-section">
+    <div class="folder-section-title">場所</div>
+    <div class="folder-grid" id="folderGrid"></div>
+  </div>
+</div>
+
+<!-- ===== フォルダページ ===== -->
+<div id="pageFolder" class="page">
+  <div class="header">
+    <button class="icon-btn" onclick="goTop()">←</button>
+    <div class="header-title" id="folderPageTitle">フォルダ</div>
     <div class="header-btns">
       <button class="btn" id="editBtn" onclick="toggleEdit()">編集</button>
-      <button class="btn add-btn" onclick="openAddModal()">＋ 追加</button>
+      <button class="btn green" onclick="openAddModal()">＋ 追加</button>
     </div>
   </div>
   <div class="plant-list" id="plantList"></div>
   <div id="editHint" class="edit-hint" style="display:none">カードをタップして編集・×で削除</div>
 </div>
 
-<!-- 編集モーダル -->
+<!-- ===== 設定ページ ===== -->
+<div id="pageSettings" class="page">
+  <div class="header">
+    <button class="icon-btn" onclick="goTop()">←</button>
+    <div class="header-title">設定</div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-label">天気の場所（市区町村名）</div>
+    <input type="text" class="settings-input" id="settingLocation" placeholder="例：福岡市博多区">
+    <div class="settings-label">背景画像（全ページ共通）</div>
+    <div class="bg-upload-area" id="bgUploadArea" onclick="document.getElementById('bgFileInput').click()">
+      <span>📷 タップして画像を選択</span>
+    </div>
+    <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="handleBgSelect(event)">
+    <button class="settings-save-btn" onclick="saveSettings()">保存する</button>
+    <button class="settings-danger-btn" onclick="clearBg()">背景画像を削除</button>
+  </div>
+</div>
+
+<!-- ===== 植物編集モーダル ===== -->
 <div class="modal-overlay" id="editModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -233,7 +457,7 @@
     <input type="text" id="plantNameInput" placeholder="例：モンステラ">
     <label id="waterDateLabel" style="display:none">最後に水やりした日</label>
     <div id="waterDateRow" style="display:none; align-items:center; gap:8px; margin-bottom:4px;">
-      <input type="date" id="waterDateInput" style="flex:1; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #c8d8b8; background:#f8fdf4; color:#2c3a1e; outline:none;">
+      <input type="date" id="waterDateInput" style="flex:1; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none;">
       <button onclick="clearWaterDate()" style="font-size:12px; padding:8px 12px; border-radius:10px; border:1px solid #ddd; background:#f5f5f5; color:#888; cursor:pointer; white-space:nowrap;">未記録に戻す</button>
     </div>
     <label>画像（タップして選択）</label>
@@ -243,77 +467,373 @@
     <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="handleImgSelect(event)">
     <div class="modal-actions">
       <button class="btn btn-cancel2" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-save" onclick="savePlant()">保存する</button>
+      <button class="btn green" onclick="savePlant()">保存する</button>
     </div>
   </div>
 </div>
 
-<!-- クロップモーダル -->
+<!-- ===== フォルダ追加/編集モーダル ===== -->
+<div class="modal-overlay" id="folderModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="folderModalTitle">フォルダを追加</h2>
+    <label>名前</label>
+    <input type="text" id="folderNameInput" placeholder="例：リビング">
+    <label>カラー</label>
+    <div class="folder-modal-colors" id="folderColorPicker"></div>
+    <div class="modal-actions" id="folderModalActions">
+      <button class="btn btn-cancel2" onclick="closeFolderModal()">キャンセル</button>
+      <button class="btn green" onclick="saveFolder()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== クロップモーダル ===== -->
 <div class="modal-overlay" id="cropModal">
   <div class="crop-modal">
     <div class="modal-handle"></div>
-    <h2 style="font-size:17px;font-weight:700;color:#2c3a1e;margin-bottom:12px">画像を調整</h2>
-    <div class="crop-canvas-wrap" id="cropWrap">
-      <canvas id="cropCanvas"></canvas>
-    </div>
+    <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:12px">画像を調整</h2>
+    <div class="crop-canvas-wrap" id="cropWrap"><canvas id="cropCanvas"></canvas></div>
     <p class="crop-hint">ドラッグで位置調整 ／ ピンチで拡大縮小</p>
     <div class="modal-actions" style="margin-top:16px">
       <button class="btn btn-cancel2" onclick="closeCropModal()" style="border-radius:12px;padding:12px;font-size:15px;flex:1">戻る</button>
-      <button class="btn btn-save" onclick="applyCrop()" style="border-radius:12px;padding:12px;font-size:15px;flex:1">決定</button>
+      <button class="btn green" onclick="applyCrop()" style="border-radius:12px;padding:12px;font-size:15px;flex:1">決定</button>
     </div>
   </div>
 </div>
 
 <script>
-// ===== データ管理 =====
+// ===========================
+// データ構造
+// folders: [{id, name, color}]
+// plants:  [{id, folderId, name, img, lastWatered}]
+// settings: {location, bgImg}
+// ===========================
+
+let folders = [];
 let plants = [];
-try { plants = JSON.parse(localStorage.getItem('wc_plants') || '[]'); } catch(e) { plants = []; }
+let settings = { location: '福岡市博多区', bgImg: null };
+
+function loadData() {
+  try { folders = JSON.parse(localStorage.getItem('wc_folders') || '[]'); } catch(e) { folders = []; }
+  try { plants  = JSON.parse(localStorage.getItem('wc_plants2') || '[]'); } catch(e) { plants = []; }
+  try { const s = JSON.parse(localStorage.getItem('wc_settings') || '{}'); settings = Object.assign(settings, s); } catch(e) {}
+}
+
+function saveAll() {
+  try { localStorage.setItem('wc_folders', JSON.stringify(folders)); } catch(e) {}
+  try { localStorage.setItem('wc_plants2', JSON.stringify(plants)); } catch(e) {}
+  try { localStorage.setItem('wc_settings', JSON.stringify(settings)); } catch(e) {}
+}
+
+// ===========================
+// ページ遷移
+// ===========================
+let currentFolderId = null;
+
+function goTop() {
+  document.getElementById('pageTop').classList.add('active');
+  document.getElementById('pageFolder').classList.remove('active');
+  document.getElementById('pageSettings').classList.remove('active');
+  renderFolderGrid();
+}
+
+function goFolder(folderId) {
+  currentFolderId = folderId;
+  const folder = folders.find(f => f.id === folderId);
+  document.getElementById('folderPageTitle').textContent = folder ? folder.name : '';
+  document.getElementById('pageTop').classList.remove('active');
+  document.getElementById('pageFolder').classList.add('active');
+  document.getElementById('pageSettings').classList.remove('active');
+  editMode = false;
+  document.getElementById('editBtn').textContent = '編集';
+  document.getElementById('editBtn').classList.remove('edit-active');
+  document.getElementById('editHint').style.display = 'none';
+  renderPlants();
+}
+
+function goSettings() {
+  document.getElementById('pageTop').classList.remove('active');
+  document.getElementById('pageFolder').classList.remove('active');
+  document.getElementById('pageSettings').classList.add('active');
+  renderSettingsPage();
+}
+
+// ===========================
+// 背景
+// ===========================
+function applyBg() {
+  const layer = document.getElementById('bgLayer');
+  if (settings.bgImg) {
+    layer.style.backgroundImage = `url(${settings.bgImg})`;
+  } else {
+    layer.style.backgroundImage = 'none';
+    layer.style.background = '#ffffff';
+  }
+}
+
+// ===========================
+// 天気（Open-Meteo）
+// ===========================
+const WEATHER_ICONS = {
+  0:'☀️', 1:'🌤', 2:'⛅', 3:'☁️',
+  45:'🌫', 48:'🌫',
+  51:'🌦', 53:'🌦', 55:'🌦',
+  61:'🌧', 63:'🌧', 65:'🌧',
+  71:'❄️', 73:'❄️', 75:'❄️',
+  80:'🌦', 81:'🌧', 82:'🌧',
+  95:'⛈', 96:'⛈', 99:'⛈'
+};
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+async function fetchWeather(locationName) {
+  try {
+    // geocoding
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1&language=ja`);
+    const geoData = await geoRes.json();
+    if (!geoData.results || !geoData.results.length) {
+      document.getElementById('weatherLocation').textContent = '場所が見つかりませんでした';
+      return;
+    }
+    const { latitude, longitude, name } = geoData.results[0];
+    document.getElementById('weatherLocation').textContent = name;
+
+    // weather
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,weathercode&current_weather=true&timezone=Asia%2FTokyo`;
+    const wRes = await fetch(url);
+    const wData = await wRes.json();
+
+    const cur = wData.current_weather;
+    document.getElementById('weatherTempBig').innerHTML = `${Math.round(cur.temperature)}<span>°</span>`;
+
+    const daily = wData.daily;
+    const today = new Date().getDay();
+    const cal = document.getElementById('weekCalendar');
+    cal.innerHTML = daily.dates ? '' : '';
+
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+      const dateStr = daily.time[i];
+      const d = new Date(dateStr);
+      const dayIdx = d.getDay();
+      const isToday = i === 0;
+      const hi = Math.round(daily.temperature_2m_max[i]);
+      const lo = Math.round(daily.temperature_2m_min[i]);
+      const icon = WEATHER_ICONS[daily.weathercode[i]] || '🌡';
+      html += `<div class="day-col${isToday ? ' today' : ''}">
+        <div class="day-name">${DAY_NAMES[dayIdx]}</div>
+        <div class="day-hi">${hi}°</div>
+        <div class="day-lo">${lo}°</div>
+        <div class="day-icon">${icon}</div>
+      </div>`;
+    }
+    cal.innerHTML = html;
+  } catch(e) {
+    document.getElementById('weatherLocation').textContent = '天気の取得に失敗しました';
+  }
+}
+
+// ===========================
+// フォルダグリッド
+// ===========================
+const FOLDER_COLORS = ['#406843','#2c5f7a','#7a3f2c','#5c3d7a','#7a6b2c','#2c7a5f','#7a2c4a','#3d3d3d'];
+let folderLongPressTimer = null;
+let folderPressFired = false;
+let folderPressBarTimer = null;
+const FOLDER_LONG_PRESS_MS = 700;
+
+function renderFolderGrid() {
+  const grid = document.getElementById('folderGrid');
+  let html = folders.map(f => {
+    const count = plants.filter(p => p.folderId === f.id).length;
+    return `<button class="folder-btn" id="fb_${f.id}"
+      style="background:${f.color || '#406843'}"
+      onclick="handleFolderClick('${f.id}')"
+      oncontextmenu="handleFolderContextMenu(event,'${f.id}')"
+      ontouchstart="startFolderLongPress(event,'${f.id}')"
+      ontouchend="cancelFolderLongPress(event,'${f.id}')"
+      ontouchmove="cancelFolderLongPress(event,'${f.id}')">
+      <div class="folder-press-bar" id="fpb_${f.id}"></div>
+      <div class="folder-name">${escHtml(f.name)}</div>
+      <div class="folder-count">${count}種類</div>
+    </button>`;
+  }).join('');
+  html += `<button class="folder-add-btn" onclick="openFolderModal()">＋</button>`;
+  grid.innerHTML = html;
+}
+
+function handleFolderClick(id) {
+  if (folderPressFired) return;
+  goFolder(id);
+}
+
+function handleFolderContextMenu(e, id) {
+  e.preventDefault();
+  openFolderEditModal(id);
+}
+
+function startFolderLongPress(e, id) {
+  folderPressFired = false;
+  const bar = document.getElementById('fpb_' + id);
+  const btn = document.getElementById('fb_' + id);
+  if (bar) {
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    requestAnimationFrame(() => {
+      bar.style.transition = `width ${FOLDER_LONG_PRESS_MS}ms linear`;
+      bar.style.width = '100%';
+    });
+  }
+  if (btn) btn.classList.add('pressing');
+
+  folderLongPressTimer = setTimeout(() => {
+    folderPressFired = true;
+    navigator.vibrate && navigator.vibrate(40);
+    if (btn) btn.classList.remove('pressing');
+    waterAllInFolder(id);
+  }, FOLDER_LONG_PRESS_MS);
+}
+
+function cancelFolderLongPress(e, id) {
+  clearTimeout(folderLongPressTimer);
+  const bar = document.getElementById('fpb_' + id);
+  const btn = document.getElementById('fb_' + id);
+  if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; }
+  if (btn) btn.classList.remove('pressing');
+}
+
+function waterAllInFolder(folderId) {
+  const folder = folders.find(f => f.id === folderId);
+  const folderPlants = plants.filter(p => p.folderId === folderId);
+  if (!folderPlants.length) {
+    showToast('植物が登録されていません');
+    return;
+  }
+  const now = Date.now();
+  folderPlants.forEach(p => { p.lastWatered = now; });
+  saveAll();
+  renderFolderGrid();
+  showToast(`💧 ${folder ? folder.name : ''} の${folderPlants.length}種類に水やりしました`);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===========================
+// フォルダモーダル
+// ===========================
+let editingFolderId = null;
+let selectedColor = FOLDER_COLORS[0];
+
+function openFolderModal() {
+  editingFolderId = null;
+  document.getElementById('folderModalTitle').textContent = 'フォルダを追加';
+  document.getElementById('folderNameInput').value = '';
+  selectedColor = FOLDER_COLORS[0];
+  renderColorPicker();
+  // 削除ボタンを非表示
+  const extra = document.getElementById('folderDeleteBtn');
+  if (extra) extra.remove();
+  document.getElementById('folderModal').classList.add('open');
+  setTimeout(() => document.getElementById('folderNameInput').focus(), 300);
+}
+
+function openFolderEditModal(id) {
+  editingFolderId = id;
+  const f = folders.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('folderModalTitle').textContent = 'フォルダを編集';
+  document.getElementById('folderNameInput').value = f.name;
+  selectedColor = f.color || FOLDER_COLORS[0];
+  renderColorPicker();
+  // 削除ボタン
+  if (!document.getElementById('folderDeleteBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'folderDeleteBtn';
+    btn.textContent = 'フォルダを削除';
+    btn.className = 'settings-danger-btn';
+    btn.style.marginTop = '12px';
+    btn.onclick = deleteFolder;
+    document.getElementById('folderModal').querySelector('.modal').appendChild(btn);
+  }
+  document.getElementById('folderModal').classList.add('open');
+}
+
+function closeFolderModal() {
+  document.getElementById('folderModal').classList.remove('open');
+  const btn = document.getElementById('folderDeleteBtn');
+  if (btn) btn.remove();
+}
+
+function renderColorPicker() {
+  const picker = document.getElementById('folderColorPicker');
+  picker.innerHTML = FOLDER_COLORS.map(c =>
+    `<div class="color-swatch${c === selectedColor ? ' selected' : ''}"
+      style="background:${c}"
+      onclick="selectColor('${c}')"></div>`
+  ).join('');
+}
+
+function selectColor(c) {
+  selectedColor = c;
+  renderColorPicker();
+}
+
+function saveFolder() {
+  const name = document.getElementById('folderNameInput').value.trim();
+  if (!name) { alert('名前を入力してください'); return; }
+  if (editingFolderId) {
+    const f = folders.find(x => x.id === editingFolderId);
+    if (f) { f.name = name; f.color = selectedColor; }
+  } else {
+    folders.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), name, color: selectedColor });
+  }
+  saveAll(); closeFolderModal(); renderFolderGrid();
+}
+
+function deleteFolder() {
+  if (!editingFolderId) return;
+  const f = folders.find(x => x.id === editingFolderId);
+  const count = plants.filter(p => p.folderId === editingFolderId).length;
+  const msg = count > 0
+    ? `「${f ? f.name : ''}」を削除すると中の植物${count}種類も削除されます。よろしいですか？`
+    : `「${f ? f.name : ''}」を削除しますか？`;
+  if (!confirm(msg)) return;
+  folders = folders.filter(x => x.id !== editingFolderId);
+  plants = plants.filter(p => p.folderId !== editingFolderId);
+  saveAll(); closeFolderModal(); renderFolderGrid();
+}
+
+// ===========================
+// 植物リスト
+// ===========================
 let editMode = false;
 let editingId = null;
 let croppedDataURL = null;
-
-// 取消用：{ id, prevWatered, timer, barTimer } を保持
 let undoMap = {};
-const UNDO_SEC = 5; // 取消できる秒数
+const UNDO_SEC = 5;
+let longPressTimer = null;
+let longPressFired = false;
 
-function saveData() {
-  try { localStorage.setItem('wc_plants', JSON.stringify(plants)); } catch(e) {}
-}
-
-function formatDate(ts) {
-  if (!ts) return null;
-  const d = new Date(ts);
-  return `${d.getMonth()+1}/${d.getDate()}`;
-}
-function daysSince(ts) {
-  if (!ts) return null;
-  return Math.floor((Date.now() - ts) / 86400000);
-}
-
-// ===== レンダリング =====
-function render() {
+function renderPlants() {
   const list = document.getElementById('plantList');
-  if (plants.length === 0) {
-    list.innerHTML = `<div class="empty-msg"><div class="empty-icon">🌱</div>右上の「＋ 追加」を押して<br>植物を登録しましょう！</div>`;
+  const folderPlants = plants.filter(p => p.folderId === currentFolderId);
+  if (folderPlants.length === 0) {
+    list.innerHTML = `<div class="empty-msg">🌱<br><br>右上の「＋ 追加」を押して<br>植物を登録しましょう！</div>`;
     return;
   }
-  list.innerHTML = plants.map(p => {
+  list.innerHTML = folderPlants.map(p => {
     const d = daysSince(p.lastWatered);
     const dateStr = formatDate(p.lastWatered);
     const isUndo = !!undoMap[p.id];
-    const dateBadge = dateStr
-      ? `<span class="badge badge-date">💧 ${dateStr}</span>`
-      : '';
-    const dayBadge = d !== null
-      ? `<span class="badge badge-days">${d === 0 ? '今日' : d + '日前'}</span>`
-      : '';
-    const undoBadge = '';
-    const imgContent = p.img
-      ? `<img src="${p.img}" alt="${p.name}">`
-      : `<span>🌿</span>`;
-    const undoBar = isUndo
-      ? `<div class="undo-bar" id="undoBar_${p.id}" style="width:100%"></div>`
-      : '';
+    const dateBadge = dateStr ? `<span class="badge">💧 ${dateStr}</span>` : '';
+    const dayBadge = d !== null ? `<span class="badge">${d === 0 ? '今日' : d + '日前'}</span>` : '';
+    const imgContent = p.img ? `<img src="${p.img}" alt="${p.name}">` : `<span>🌿</span>`;
+    const undoBar = isUndo ? `<div class="undo-bar" id="undoBar_${p.id}" style="width:100%"></div>` : '';
     return `<div class="plant-card${p.lastWatered ? ' watered' : ''}${editMode ? ' edit-mode' : ''}"
       id="card_${p.id}"
       onclick="if(!longPressFired) handleCardClick('${p.id}')"
@@ -325,17 +845,17 @@ function render() {
       <div class="plant-img">${imgContent}</div>
       <div class="plant-info">
         <div class="plant-name">${escHtml(p.name || '名前未設定')}</div>
-        <div class="plant-badges">${dateBadge}${dayBadge}${undoBadge}</div>
+        <div class="plant-badges">${dateBadge}${dayBadge}</div>
       </div>
       <button class="delete-btn" onclick="deletePlant(event,'${p.id}')">×</button>
       ${undoBar}
     </div>`;
   }).join('');
 
-  // バーのアニメーション開始
+  // undoバーアニメ
   Object.keys(undoMap).forEach(id => {
     const bar = document.getElementById('undoBar_' + id);
-    if (bar && undoMap[id]) {
+    if (bar) {
       const elapsed = (Date.now() - undoMap[id].startTime) / 1000;
       const remaining = Math.max(0, UNDO_SEC - elapsed);
       const pct = (remaining / UNDO_SEC) * 100;
@@ -349,14 +869,20 @@ function render() {
   });
 }
 
+function formatDate(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function daysSince(ts) {
+  if (!ts) return null;
+  return Math.floor((Date.now() - ts) / 86400000);
+}
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ===== 長押し処理 =====
-let longPressTimer = null;
-let longPressFired = false;
-
+// 長押し（植物カード）
 function startLongPress(e, id) {
   longPressFired = false;
   longPressTimer = setTimeout(() => {
@@ -365,55 +891,31 @@ function startLongPress(e, id) {
     openEditModal(id);
   }, 600);
 }
+function cancelLongPress() { clearTimeout(longPressTimer); }
+function handleLongPress(e, id) { e.preventDefault(); openEditModal(id); }
 
-function cancelLongPress() {
-  clearTimeout(longPressTimer);
-}
-
-function handleLongPress(e, id) {
-  e.preventDefault();
-  openEditModal(id);
-}
-
-// ===== カード操作 =====
 function handleCardClick(id) {
   if (editMode) { openEditModal(id); return; }
-
-  // 取消モード中なら取消
   if (undoMap[id]) {
     clearTimeout(undoMap[id].timer);
     const prev = undoMap[id].prevWatered;
     delete undoMap[id];
     const p = plants.find(x => x.id === id);
-    if (p) { p.lastWatered = prev; }
-    saveData(); render();
-    return;
+    if (p) p.lastWatered = prev;
+    saveAll(); renderPlants(); return;
   }
-
-  // 水やり記録（既存の日時を保存しておく）
   const p = plants.find(x => x.id === id);
   if (!p) return;
   const prevWatered = p.lastWatered;
   p.lastWatered = Date.now();
-  saveData(); render();
-
-  // アニメ
+  saveAll(); renderPlants();
   const card = document.getElementById('card_' + id);
-  if (card) {
-    card.classList.add('rippling');
-    setTimeout(() => card.classList.remove('rippling'), 500);
-  }
-
-  // 取消タイマーをセット
+  if (card) { card.classList.add('rippling'); setTimeout(() => card.classList.remove('rippling'), 500); }
   undoMap[id] = {
-    prevWatered,
-    startTime: Date.now(),
-    timer: setTimeout(() => {
-      delete undoMap[id];
-      render();
-    }, UNDO_SEC * 1000)
+    prevWatered, startTime: Date.now(),
+    timer: setTimeout(() => { delete undoMap[id]; renderPlants(); }, UNDO_SEC * 1000)
   };
-  render();
+  renderPlants();
 }
 
 function deletePlant(e, id) {
@@ -421,7 +923,7 @@ function deletePlant(e, id) {
   if (!confirm('この植物を削除しますか？')) return;
   if (undoMap[id]) { clearTimeout(undoMap[id].timer); delete undoMap[id]; }
   plants = plants.filter(x => x.id !== id);
-  saveData(); render();
+  saveAll(); renderPlants();
 }
 
 function toggleEdit() {
@@ -430,10 +932,12 @@ function toggleEdit() {
   btn.classList.toggle('edit-active', editMode);
   btn.textContent = editMode ? '完了' : '編集';
   document.getElementById('editHint').style.display = editMode ? 'block' : 'none';
-  render();
+  renderPlants();
 }
 
-// ===== 追加・編集モーダル =====
+// ===========================
+// 植物モーダル
+// ===========================
 function openAddModal() {
   editingId = null;
   document.getElementById('modalTitle').textContent = '植物を追加';
@@ -458,47 +962,26 @@ function openEditModal(id) {
   document.getElementById('waterDateRow').style.display = 'flex';
   if (p.lastWatered) {
     const d = new Date(p.lastWatered);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    document.getElementById('waterDateInput').value = yyyy+'-'+mm+'-'+dd;
+    document.getElementById('waterDateInput').value =
+      `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   } else {
     document.getElementById('waterDateInput').value = '';
   }
   document.getElementById('editModal').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('editModal').classList.remove('open');
-}
+function closeModal() { document.getElementById('editModal').classList.remove('open'); }
 
-// 画像エリアの表示更新
 function renderImgArea() {
   const area = document.getElementById('imgUploadArea');
-  if (croppedDataURL) {
-    area.innerHTML = `
-      <img src="${croppedDataURL}" alt="">
-      <button class="img-delete-btn" onclick="deleteImg(event)">×</button>
-    `;
-  } else {
-    area.innerHTML = '<span>📷<br>タップして<br>画像を選択</span>';
-  }
+  area.innerHTML = croppedDataURL
+    ? `<img src="${croppedDataURL}" alt=""><button class="img-delete-btn" onclick="deleteImg(event)">×</button>`
+    : '<span>📷<br>タップして<br>画像を選択</span>';
 }
 
-// 画像エリアタップ（削除ボタン以外）
-function imgAreaTapped() {
-  if (!croppedDataURL) {
-    document.getElementById('imgFileInput').click();
-  }
-  // 画像がある場合は何もしない（削除ボタンで操作）
-}
-
-// 画像削除
-function deleteImg(e) {
-  e.stopPropagation();
-  croppedDataURL = null;
-  renderImgArea();
-}
+function imgAreaTapped() { if (!croppedDataURL) document.getElementById('imgFileInput').click(); }
+function deleteImg(e) { e.stopPropagation(); croppedDataURL = null; renderImgArea(); }
+function clearWaterDate() { document.getElementById('waterDateInput').value = ''; }
 
 function savePlant() {
   const name = document.getElementById('plantNameInput').value.trim();
@@ -506,56 +989,55 @@ function savePlant() {
   if (editingId) {
     const p = plants.find(x => x.id === editingId);
     if (p) {
-      p.name = name;
-      p.img = croppedDataURL || null;
-      // 水やり日付を反映
+      p.name = name; p.img = croppedDataURL || null;
       const dateVal = document.getElementById('waterDateInput').value;
       if (dateVal) {
-        const d = new Date(dateVal);
-        // 時刻は正午に設定（日付のずれ防止）
-        d.setHours(12, 0, 0, 0);
+        const d = new Date(dateVal); d.setHours(12,0,0,0);
         p.lastWatered = d.getTime();
-      } else {
-        p.lastWatered = null;
-      }
-      // 取消タイマーがあればクリア
+      } else { p.lastWatered = null; }
       if (undoMap[editingId]) { clearTimeout(undoMap[editingId].timer); delete undoMap[editingId]; }
     }
   } else {
     plants.push({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-      name, img: croppedDataURL || null, lastWatered: null
+      folderId: currentFolderId, name, img: croppedDataURL || null, lastWatered: null
     });
   }
-  saveData(); render(); closeModal();
+  saveAll(); renderPlants(); closeModal();
 }
 
-function clearWaterDate() {
-  document.getElementById('waterDateInput').value = '';
-}
-
-// ===== 画像選択 =====
-function handleImgSelect(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => openCropModal(ev.target.result);
-  reader.readAsDataURL(file);
-  e.target.value = '';
-}
-
-// ===== クロップ =====
+// ===========================
+// 画像クロップ
+// ===========================
 let cropImg = null, cropX = 0, cropY = 0, cropScale = 1;
 let isDragging = false, dragStart = {x:0,y:0}, imgStartPos = {x:0,y:0};
 let lastPinchDist = null;
+let cropTarget = 'plant'; // 'plant' or 'bg'
+
+function handleImgSelect(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { cropTarget = 'plant'; openCropModal(ev.target.result); };
+  reader.readAsDataURL(file); e.target.value = '';
+}
+
+function handleBgSelect(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    settings.bgImg = ev.target.result;
+    renderBgUploadArea();
+    applyBg();
+  };
+  reader.readAsDataURL(file); e.target.value = '';
+}
 
 function openCropModal(src) {
   cropImg = new Image();
   cropImg.onload = () => {
     const wrap = document.getElementById('cropWrap');
     const size = wrap.offsetWidth || 300;
-    const minDim = Math.min(cropImg.width, cropImg.height);
-    cropScale = size / minDim;
+    cropScale = size / Math.min(cropImg.width, cropImg.height);
     cropX = 0; cropY = 0;
     drawCrop();
     document.getElementById('cropModal').classList.add('open');
@@ -563,9 +1045,7 @@ function openCropModal(src) {
   cropImg.src = src;
 }
 
-function closeCropModal() {
-  document.getElementById('cropModal').classList.remove('open');
-}
+function closeCropModal() { document.getElementById('cropModal').classList.remove('open'); }
 
 function drawCrop() {
   const canvas = document.getElementById('cropCanvas');
@@ -573,12 +1053,10 @@ function drawCrop() {
   const size = wrap.offsetWidth || 300;
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, size, size);
-  const iw = cropImg.width * cropScale;
-  const ih = cropImg.height * cropScale;
-  const cx = size / 2 + cropX;
-  const cy = size / 2 + cropY;
-  ctx.drawImage(cropImg, cx - iw/2, cy - ih/2, iw, ih);
+  ctx.clearRect(0,0,size,size);
+  const iw = cropImg.width * cropScale, ih = cropImg.height * cropScale;
+  const cx = size/2 + cropX, cy = size/2 + cropY;
+  ctx.drawImage(cropImg, cx-iw/2, cy-ih/2, iw, ih);
 }
 
 function applyCrop() {
@@ -589,62 +1067,67 @@ function applyCrop() {
 }
 
 const cw = document.getElementById('cropWrap');
-cw.addEventListener('mousedown', e => {
-  isDragging = true;
-  dragStart = {x: e.clientX, y: e.clientY};
-  imgStartPos = {x: cropX, y: cropY};
-  cw.style.cursor = 'grabbing';
-});
-cw.addEventListener('mousemove', e => {
-  if (!isDragging) return;
-  cropX = imgStartPos.x + (e.clientX - dragStart.x);
-  cropY = imgStartPos.y + (e.clientY - dragStart.y);
-  drawCrop();
-});
-cw.addEventListener('mouseup', () => { isDragging = false; cw.style.cursor = 'grab'; });
-cw.addEventListener('mouseleave', () => { isDragging = false; cw.style.cursor = 'grab'; });
-cw.addEventListener('wheel', e => {
-  e.preventDefault();
-  cropScale = Math.max(0.1, Math.min(8, cropScale * (1 - e.deltaY * 0.001)));
-  drawCrop();
-}, {passive: false});
-
-cw.addEventListener('touchstart', e => {
-  if (e.touches.length === 1) {
-    isDragging = true;
-    dragStart = {x: e.touches[0].clientX, y: e.touches[0].clientY};
-    imgStartPos = {x: cropX, y: cropY};
-    lastPinchDist = null;
-  } else if (e.touches.length === 2) {
-    isDragging = false;
-    lastPinchDist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
+cw.addEventListener('mousedown', e => { isDragging=true; dragStart={x:e.clientX,y:e.clientY}; imgStartPos={x:cropX,y:cropY}; cw.style.cursor='grabbing'; });
+cw.addEventListener('mousemove', e => { if(!isDragging)return; cropX=imgStartPos.x+(e.clientX-dragStart.x); cropY=imgStartPos.y+(e.clientY-dragStart.y); drawCrop(); });
+cw.addEventListener('mouseup', ()=>{ isDragging=false; cw.style.cursor='grab'; });
+cw.addEventListener('mouseleave', ()=>{ isDragging=false; cw.style.cursor='grab'; });
+cw.addEventListener('wheel', e=>{ e.preventDefault(); cropScale=Math.max(0.1,Math.min(8,cropScale*(1-e.deltaY*0.001))); drawCrop(); },{passive:false});
+cw.addEventListener('touchstart', e=>{
+  if(e.touches.length===1){ isDragging=true; dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; imgStartPos={x:cropX,y:cropY}; lastPinchDist=null; }
+  else if(e.touches.length===2){ isDragging=false; lastPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); }
+},{passive:true});
+cw.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    if(lastPinchDist) cropScale=Math.max(0.1,Math.min(8,cropScale*dist/lastPinchDist));
+    lastPinchDist=dist; drawCrop(); return;
   }
-}, {passive: true});
+  if(!isDragging||e.touches.length!==1)return;
+  cropX=imgStartPos.x+(e.touches[0].clientX-dragStart.x); cropY=imgStartPos.y+(e.touches[0].clientY-dragStart.y); drawCrop();
+},{passive:true});
+cw.addEventListener('touchend', ()=>{ isDragging=false; lastPinchDist=null; });
 
-cw.addEventListener('touchmove', e => {
-  if (e.touches.length === 2) {
-    const dist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
-    if (lastPinchDist) {
-      cropScale = Math.max(0.1, Math.min(8, cropScale * dist / lastPinchDist));
-    }
-    lastPinchDist = dist;
-    drawCrop(); return;
+// ===========================
+// 設定ページ
+// ===========================
+function renderSettingsPage() {
+  document.getElementById('settingLocation').value = settings.location || '';
+  renderBgUploadArea();
+}
+
+function renderBgUploadArea() {
+  const area = document.getElementById('bgUploadArea');
+  if (settings.bgImg) {
+    area.innerHTML = `<img src="${settings.bgImg}" alt="背景"><button class="bg-delete-btn" onclick="clearBg(event)">×</button>`;
+  } else {
+    area.innerHTML = '<span>📷 タップして画像を選択</span>';
   }
-  if (!isDragging || e.touches.length !== 1) return;
-  cropX = imgStartPos.x + (e.touches[0].clientX - dragStart.x);
-  cropY = imgStartPos.y + (e.touches[0].clientY - dragStart.y);
-  drawCrop();
-}, {passive: true});
+}
 
-cw.addEventListener('touchend', () => { isDragging = false; lastPinchDist = null; });
+function saveSettings() {
+  const loc = document.getElementById('settingLocation').value.trim();
+  if (loc) settings.location = loc;
+  saveAll();
+  showToast('設定を保存しました');
+  goTop();
+  fetchWeather(settings.location);
+}
 
-render();
+function clearBg(e) {
+  if (e) e.stopPropagation();
+  settings.bgImg = null;
+  saveAll();
+  renderBgUploadArea();
+  applyBg();
+}
+
+// ===========================
+// 起動
+// ===========================
+loadData();
+applyBg();
+renderFolderGrid();
+fetchWeather(settings.location);
 </script>
 </body>
 </html>
