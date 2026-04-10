@@ -35,14 +35,21 @@ body {
 /* ===== 共通ヘッダー ===== */
 .header {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(255,255,255,0.88);
-  backdrop-filter: blur(10px);
+  background: transparent;
   padding: 16px 16px 12px;
   display: flex; align-items: center; justify-content: space-between;
 }
 .header-title {
   font-size: 22px; font-weight: 800;
   letter-spacing: -0.5px; color: #1a1a1a;
+}
+/* トップページのヘッダーは中央揃え */
+#pageTop .header {
+  justify-content: center;
+  position: relative;
+}
+#pageTop .header .header-btns {
+  position: absolute; right: 16px;
 }
 .header-btns { display: flex; gap: 8px; align-items: center; }
 
@@ -93,8 +100,8 @@ body {
 }
 .day-col {
   display: flex; flex-direction: column; align-items: center;
-  padding: 8px 4px;
-  border-radius: 14px;
+  padding: 10px 4px;
+  border-radius: 999px;
   border: 1px solid #e8e8e8;
   background: rgba(255,255,255,0.7);
   gap: 3px;
@@ -117,17 +124,24 @@ body {
 .day-col .day-icon { font-size: 14px; }
 
 /* フォルダセクション */
-.folder-section { padding: 16px 16px 0; }
+.top-fixed {
+  position: sticky; top: 0; z-index: 10;
+}
+.folder-scroll {
+  overflow-y: auto;
+  padding: 0 16px 40px;
+}
 .folder-section-title {
-  font-size: 13px; font-weight: 600; color: #888;
-  margin-bottom: 10px; letter-spacing: 0.3px;
+  font-size: 11px; font-weight: 700; color: #999;
+  margin-bottom: 10px; letter-spacing: 1.2px;
+  text-transform: uppercase;
 }
 .folder-grid {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 .folder-btn {
-  aspect-ratio: 1/1;
+  aspect-ratio: 5/4;
   border-radius: 18px;
   border: none;
   background: #406843;
@@ -155,7 +169,7 @@ body {
   width: 0%; transition: none;
 }
 .folder-add-btn {
-  aspect-ratio: 1/1;
+  aspect-ratio: 5/4;
   border-radius: 18px;
   border: 2px dashed #ccc;
   background: rgba(240,240,240,0.6);
@@ -262,7 +276,7 @@ body {
   background: #fafafa;
   position: relative;
 }
-.bg-upload-area img { width: 100%; height: 100%; object-fit: cover; }
+.bg-upload-area img { width: 100%; height: 100%; object-fit: contain; background: #111; }
 .bg-upload-area span { font-size: 13px; color: #aaa; }
 .bg-delete-btn {
   position: absolute; top: 8px; right: 8px;
@@ -373,6 +387,45 @@ body {
   pointer-events: none;
 }
 
+/* フォルダ長押しメニュー */
+.folder-menu-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none; align-items: flex-end; justify-content: center;
+  z-index: 400;
+}
+.folder-menu-overlay.open { display: flex; }
+.folder-menu {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  width: 100%; max-width: 480px;
+}
+.folder-menu-title {
+  font-size: 13px; font-weight: 700; color: #aaa;
+  text-align: center; margin-bottom: 12px;
+  letter-spacing: 0.3px;
+}
+.folder-menu-item {
+  width: 100%; padding: 16px;
+  border: none; border-radius: 14px;
+  background: #f5f5f5; color: #1a1a1a;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer; margin-bottom: 8px;
+  text-align: left; display: flex; align-items: center; gap: 12px;
+  transition: background 0.15s;
+}
+.folder-menu-item:active { background: #eaeaea; }
+.folder-menu-item.danger { color: #c0392b; background: #fff5f5; }
+.folder-menu-item.danger:active { background: #ffe0e0; }
+.folder-menu-cancel {
+  width: 100%; padding: 16px;
+  border: none; border-radius: 14px;
+  background: #f0f0f0; color: #666;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer; margin-top: 4px;
+}
+
 /* 一括水やり確認トースト */
 .toast {
   position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
@@ -401,16 +454,20 @@ body {
     </div>
   </div>
 
-  <div class="weather-section">
-    <div class="weather-location" id="weatherLocation">読み込み中...</div>
-    <div class="weather-temp-big" id="weatherTempBig">--<span>°</span></div>
-    <div class="week-calendar" id="weekCalendar">
-      <div style="grid-column:1/-1;text-align:center;color:#aaa;font-size:12px;padding:16px 0">天気を読み込み中...</div>
+  <div class="top-fixed">
+    <div class="weather-section" style="padding:16px 16px 8px;">
+      <div class="weather-location" id="weatherLocation">読み込み中...</div>
+      <div class="weather-temp-big" id="weatherTempBig">--<span>°</span></div>
+      <div class="week-calendar" id="weekCalendar">
+        <div style="grid-column:1/-1;text-align:center;color:#aaa;font-size:12px;padding:16px 0">天気を読み込み中...</div>
+      </div>
+    </div>
+    <div style="padding: 12px 16px 8px;">
+      <div class="folder-section-title">CATEGORY</div>
     </div>
   </div>
 
-  <div class="folder-section">
-    <div class="folder-section-title">場所</div>
+  <div class="folder-scroll">
     <div class="folder-grid" id="folderGrid"></div>
   </div>
 </div>
@@ -499,6 +556,17 @@ body {
       <button class="btn btn-cancel2" onclick="closeCropModal()" style="border-radius:12px;padding:12px;font-size:15px;flex:1">戻る</button>
       <button class="btn green" onclick="applyCrop()" style="border-radius:12px;padding:12px;font-size:15px;flex:1">決定</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== フォルダ長押しメニュー ===== -->
+<div class="folder-menu-overlay" id="folderMenuOverlay">
+  <div class="folder-menu">
+    <div class="folder-menu-title" id="folderMenuTitle">フォルダ名</div>
+    <button class="folder-menu-item" onclick="folderMenuWater()">💧 一括水やり</button>
+    <button class="folder-menu-item" onclick="folderMenuEdit()">✏️ フォルダを編集</button>
+    <button class="folder-menu-item danger" onclick="folderMenuDelete()">🗑️ フォルダを削除</button>
+    <button class="folder-menu-cancel" onclick="closeFolderMenu()">キャンセル</button>
   </div>
 </div>
 
@@ -611,20 +679,34 @@ async function fetchWeather(locationName) {
     const cal = document.getElementById('weekCalendar');
     cal.innerHTML = daily.dates ? '' : '';
 
+    // 今日の曜日インデックス(0=Sun)
+    const todayDayIdx = new Date().getDay();
+    // APIデータをdateをキーにマップ化
+    const weatherMap = {};
+    for (let i = 0; i < daily.time.length; i++) {
+      weatherMap[daily.time[i]] = {
+        hi: Math.round(daily.temperature_2m_max[i]),
+        lo: Math.round(daily.temperature_2m_min[i]),
+        icon: WEATHER_ICONS[daily.weathercode[i]] || '🌡'
+      };
+    }
+    // 今週の日曜日から始まる7日を生成
+    const now = new Date();
+    const sundayOffset = now.getDay(); // 今日が何曜日か(0=Sun)
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - sundayOffset);
     let html = '';
     for (let i = 0; i < 7; i++) {
-      const dateStr = daily.time[i];
-      const d = new Date(dateStr);
-      const dayIdx = d.getDay();
-      const isToday = i === 0;
-      const hi = Math.round(daily.temperature_2m_max[i]);
-      const lo = Math.round(daily.temperature_2m_min[i]);
-      const icon = WEATHER_ICONS[daily.weathercode[i]] || '🌡';
+      const d = new Date(sunday);
+      d.setDate(sunday.getDate() + i);
+      const dateKey = d.toISOString().slice(0, 10);
+      const isToday = d.toDateString() === now.toDateString();
+      const w = weatherMap[dateKey] || { hi: '--', lo: '--', icon: '🌡' };
       html += `<div class="day-col${isToday ? ' today' : ''}">
-        <div class="day-name">${DAY_NAMES[dayIdx]}</div>
-        <div class="day-hi">${hi}°</div>
-        <div class="day-lo">${lo}°</div>
-        <div class="day-icon">${icon}</div>
+        <div class="day-name">${DAY_NAMES[d.getDay()]}</div>
+        <div class="day-hi">${w.hi !== '--' ? w.hi + '°' : '--'}</div>
+        <div class="day-lo">${w.lo !== '--' ? w.lo + '°' : '--'}</div>
+        <div class="day-icon">${w.icon}</div>
       </div>`;
     }
     cal.innerHTML = html;
@@ -669,7 +751,7 @@ function handleFolderClick(id) {
 
 function handleFolderContextMenu(e, id) {
   e.preventDefault();
-  openFolderEditModal(id);
+  openFolderMenu(id);
 }
 
 function startFolderLongPress(e, id) {
@@ -690,7 +772,7 @@ function startFolderLongPress(e, id) {
     folderPressFired = true;
     navigator.vibrate && navigator.vibrate(40);
     if (btn) btn.classList.remove('pressing');
-    waterAllInFolder(id);
+    openFolderMenu(id);
   }, FOLDER_LONG_PRESS_MS);
 }
 
@@ -700,6 +782,48 @@ function cancelFolderLongPress(e, id) {
   const btn = document.getElementById('fb_' + id);
   if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; }
   if (btn) btn.classList.remove('pressing');
+}
+
+// ===========================
+// フォルダ長押しメニュー
+// ===========================
+let menuFolderId = null;
+
+function openFolderMenu(id) {
+  menuFolderId = id;
+  const f = folders.find(x => x.id === id);
+  document.getElementById('folderMenuTitle').textContent = f ? f.name : '';
+  document.getElementById('folderMenuOverlay').classList.add('open');
+}
+
+function closeFolderMenu() {
+  document.getElementById('folderMenuOverlay').classList.remove('open');
+  menuFolderId = null;
+}
+
+function folderMenuWater() {
+  closeFolderMenu();
+  waterAllInFolder(menuFolderId);
+}
+
+function folderMenuEdit() {
+  const id = menuFolderId;
+  closeFolderMenu();
+  openFolderEditModal(id);
+}
+
+function folderMenuDelete() {
+  const id = menuFolderId;
+  closeFolderMenu();
+  const f = folders.find(x => x.id === id);
+  const count = plants.filter(p => p.folderId === id).length;
+  const msg = count > 0
+    ? `「${f ? f.name : ''}」を削除すると中の植物${count}種類も削除されます。よろしいですか？`
+    : `「${f ? f.name : ''}」を削除しますか？`;
+  if (!confirm(msg)) return;
+  folders = folders.filter(x => x.id !== id);
+  plants = plants.filter(p => p.folderId !== id);
+  saveAll(); renderFolderGrid();
 }
 
 function waterAllInFolder(folderId) {
