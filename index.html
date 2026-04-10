@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>水やりチェッカー</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: #f5f7f2;
+    color: #2c3a1e;
+    min-height: 100vh;
+  }
+  .app { max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+
+  /* ヘッダー */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(245,247,242,0.92);
+    backdrop-filter: blur(8px);
+    padding: 16px 16px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #dde8d0;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; color: #2c3a1e; letter-spacing: -0.3px; }
+  .header-btns { display: flex; gap: 8px; }
+  .btn {
+    font-size: 13px; font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1.5px solid #b8d4a0;
+    background: #fff;
+    color: #3d6b22;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn.edit-active { background: #c8e6a8; border-color: #7db85a; color: #2c5a10; }
+  .btn.add-btn { background: #4a8f2a; border-color: #4a8f2a; color: #fff; }
+  .btn.add-btn:active { background: #3a7020; }
+
+  /* 植物リスト */
+  .plant-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+  .empty-msg {
+    text-align: center; padding: 48px 24px;
+    color: #8fa87a; font-size: 14px; line-height: 1.7;
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* カード */
+  .plant-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1.5px solid #dde8d0;
+    background: #eef6e4;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    position: relative;
+    -webkit-user-select: none; user-select: none;
+  }
+  .plant-card:active { transform: scale(0.98); }
+  .plant-card.watered { background: #dff2ec; border-color: #a0d9c8; }
+  .plant-card.edit-mode { border: 2px dashed #7db85a; background: #f0f8e8; }
+
+  /* 画像エリア */
+  .plant-img {
+    width: 72px; height: 72px; flex-shrink: 0;
+    border-radius: 12px;
+    background: #d8ecc8;
+    border: 1px solid #c0d8a8;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+  }
+  .plant-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* テキスト情報 */
+  .plant-info { flex: 1; min-width: 0; }
+  .plant-name {
+    font-size: 16px; font-weight: 700; color: #2c3a1e;
+    margin-bottom: 8px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .plant-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .badge {
+    font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .badge-date { background: #a0d9c8; color: #0d5e4a; }
+  .badge-days { background: #c8e6a8; color: #2c5a10; }
+  .badge-none { background: #e8eedf; color: #7a9860; }
+
+  /* 削除ボタン */
+  .delete-btn {
+    position: absolute; top: 8px; right: 8px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #ffdddd; color: #c0392b;
+    border: none; cursor: pointer;
+    font-size: 16px; font-weight: 700;
+    display: none;
+    align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .edit-mode .delete-btn { display: flex; }
+
+  /* 編集ヒント */
+  .edit-hint {
+    text-align: center; font-size: 12px; color: #8fa87a;
+    padding: 8px 0 0;
+  }
+
+  /* ===== モーダル共通 ===== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    width: 100%; max-width: 480px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: #ddd; margin: 0 auto 16px;
+  }
+  .modal h2 { font-size: 17px; font-weight: 700; color: #2c3a1e; margin-bottom: 16px; }
+  .modal label { font-size: 13px; color: #6a8a50; font-weight: 600; display: block; margin: 14px 0 6px; }
+  .modal input[type="text"] {
+    width: 100%; font-size: 16px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1.5px solid #c8d8b8;
+    background: #f8fdf4;
+    color: #2c3a1e;
+    outline: none;
+  }
+  .modal input[type="text"]:focus { border-color: #7db85a; }
+
+  /* 画像アップロードエリア */
+  .img-upload-area {
+    width: 140px; height: 140px;
+    border: 2px dashed #b8d4a0;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden;
+    background: #f0f8e8;
+    margin: 6px 0;
+  }
+  .img-upload-area img { width: 100%; height: 100%; object-fit: cover; }
+  .img-upload-area span { font-size: 12px; color: #8fa87a; text-align: center; padding: 12px; line-height: 1.5; }
+
+  /* モーダルボタン */
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions .btn { flex: 1; text-align: center; border-radius: 12px; padding: 12px; font-size: 15px; }
+  .btn-save { background: #4a8f2a; border-color: #4a8f2a; color: #fff; }
+  .btn-save:active { background: #3a7020; }
+  .btn-cancel2 { background: #f0f0f0; border-color: #ddd; color: #666; }
+
+  /* ===== クロップモーダル ===== */
+  .crop-modal {
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    width: 100%; max-width: 480px;
+  }
+  .crop-canvas-wrap {
+    width: 100%; aspect-ratio: 1/1;
+    overflow: hidden; border-radius: 14px;
+    background: #222; cursor: grab;
+    touch-action: none; position: relative;
+  }
+  .crop-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+  .crop-hint { font-size: 12px; color: #8fa87a; text-align: center; margin-top: 8px; }
+
+  /* 水やりアニメ */
+  @keyframes ripple {
+    0% { transform: scale(0.95); opacity: 1; }
+    100% { transform: scale(1.02); opacity: 0; }
+  }
+  .rippling::after {
+    content: ''; position: absolute; inset: 0;
+    border-radius: 16px;
+    border: 2px solid #4a8f2a;
+    animation: ripple 0.4s ease-out forwards;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>🌿 水やりチェッカー</h1>
+    <div class="header-btns">
+      <button class="btn" id="editBtn" onclick="toggleEdit()">編集</button>
+      <button class="btn add-btn" onclick="openAddModal()">＋ 追加</button>
+    </div>
+  </div>
+
+  <div class="plant-list" id="plantList"></div>
+  <div id="editHint" class="edit-hint" style="display:none">カードをタップして編集・×で削除</div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modalTitle">植物を追加</h2>
+    <label>名前</label>
+    <input type="text" id="plantNameInput" placeholder="例：モンステラ">
+    <label>画像（タップして選択）</label>
+    <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('imgFileInput').click()">
+      <span>📷<br>タップして<br>画像を選択</span>
+    </div>
+    <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="handleImgSelect(event)">
+    <div class="modal-actions">
+      <button class="btn btn-cancel2" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-save" onclick="savePlant()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- クロップモーダル -->
+<div class="modal-overlay" id="cropModal">
+  <div class="crop-modal">
+    <div class="modal-handle"></div>
+    <h2 style="font-size:17px;font-weight:700;color:#2c3a1e;margin-bottom:12px">画像を調整</h2>
+    <div class="crop-canvas-wrap" id="cropWrap">
+      <canvas id="cropCanvas"></canvas>
+    </div>
+    <p class="crop-hint">ドラッグで位置調整 ／ ピンチで拡大縮小</p>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-cancel2" onclick="closeCropModal()" style="border-radius:12px;padding:12px;font-size:15px;flex:1">戻る</button>
+      <button class="btn btn-save" onclick="applyCrop()" style="border-radius:12px;padding:12px;font-size:15px;flex:1">決定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== データ管理 =====
+let plants = [];
+try { plants = JSON.parse(localStorage.getItem('wc_plants') || '[]'); } catch(e) { plants = []; }
+let editMode = false;
+let editingId = null;
+let croppedDataURL = null;
+
+function saveData() {
+  try { localStorage.setItem('wc_plants', JSON.stringify(plants)); } catch(e) {}
+}
+
+// ===== 日付ユーティリティ =====
+function formatDate(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function daysSince(ts) {
+  if (!ts) return null;
+  return Math.floor((Date.now() - ts) / 86400000);
+}
+
+// ===== レンダリング =====
+function render() {
+  const list = document.getElementById('plantList');
+  if (plants.length === 0) {
+    list.innerHTML = `<div class="empty-msg"><div class="empty-icon">🌱</div>右上の「＋ 追加」を押して<br>植物を登録しましょう！</div>`;
+    return;
+  }
+  list.innerHTML = plants.map(p => {
+    const d = daysSince(p.lastWatered);
+    const dateStr = formatDate(p.lastWatered);
+    const dateBadge = dateStr
+      ? `<span class="badge badge-date">💧 ${dateStr}</span>`
+      : `<span class="badge badge-none">未記録</span>`;
+    const dayBadge = d !== null
+      ? `<span class="badge badge-days">${d === 0 ? '今日' : d + '日前'}</span>`
+      : '';
+    const imgContent = p.img
+      ? `<img src="${p.img}" alt="${p.name}">`
+      : `<span>🌿</span>`;
+    return `<div class="plant-card${p.lastWatered ? ' watered' : ''}${editMode ? ' edit-mode' : ''}"
+      id="card_${p.id}" onclick="handleCardClick('${p.id}')" style="position:relative">
+      <div class="plant-img">${imgContent}</div>
+      <div class="plant-info">
+        <div class="plant-name">${escHtml(p.name || '名前未設定')}</div>
+        <div class="plant-badges">${dateBadge}${dayBadge}</div>
+      </div>
+      <button class="delete-btn" onclick="deletePlant(event,'${p.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== カード操作 =====
+function handleCardClick(id) {
+  if (editMode) { openEditModal(id); return; }
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+  p.lastWatered = Date.now();
+  saveData(); render();
+  // アニメ
+  const card = document.getElementById('card_' + id);
+  if (card) {
+    card.classList.add('rippling');
+    setTimeout(() => card.classList.remove('rippling'), 500);
+  }
+}
+
+function deletePlant(e, id) {
+  e.stopPropagation();
+  if (!confirm('この植物を削除しますか？')) return;
+  plants = plants.filter(x => x.id !== id);
+  saveData(); render();
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  const btn = document.getElementById('editBtn');
+  btn.classList.toggle('edit-active', editMode);
+  btn.textContent = editMode ? '完了' : '編集';
+  document.getElementById('editHint').style.display = editMode ? 'block' : 'none';
+  render();
+}
+
+// ===== 追加・編集モーダル =====
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '植物を追加';
+  document.getElementById('plantNameInput').value = '';
+  croppedDataURL = null;
+  document.getElementById('imgUploadArea').innerHTML = '<span>📷<br>タップして<br>画像を選択</span>';
+  document.getElementById('editModal').classList.add('open');
+  setTimeout(() => document.getElementById('plantNameInput').focus(), 300);
+}
+
+function openEditModal(id) {
+  editingId = id;
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = '植物を編集';
+  document.getElementById('plantNameInput').value = p.name || '';
+  croppedDataURL = p.img || null;
+  document.getElementById('imgUploadArea').innerHTML = p.img
+    ? `<img src="${p.img}" alt="">`
+    : '<span>📷<br>タップして<br>画像を選択</span>';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.remove('open');
+}
+
+function savePlant() {
+  const name = document.getElementById('plantNameInput').value.trim();
+  if (!name) { alert('名前を入力してください'); return; }
+  if (editingId) {
+    const p = plants.find(x => x.id === editingId);
+    if (p) { p.name = name; if (croppedDataURL) p.img = croppedDataURL; }
+  } else {
+    plants.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name, img: croppedDataURL || null, lastWatered: null });
+  }
+  saveData(); render(); closeModal();
+}
+
+// ===== 画像選択 =====
+function handleImgSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => openCropModal(ev.target.result);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+// ===== クロップ =====
+let cropImg = null, cropX = 0, cropY = 0, cropScale = 1;
+let isDragging = false, dragStart = {x:0,y:0}, imgStartPos = {x:0,y:0};
+let lastPinchDist = null;
+
+function openCropModal(src) {
+  cropImg = new Image();
+  cropImg.onload = () => {
+    const wrap = document.getElementById('cropWrap');
+    const size = wrap.offsetWidth || 300;
+    // 画像が正方形エリアに収まるように初期スケールを設定
+    const minDim = Math.min(cropImg.width, cropImg.height);
+    cropScale = size / minDim;
+    cropX = 0; cropY = 0;
+    drawCrop();
+    document.getElementById('cropModal').classList.add('open');
+  };
+  cropImg.src = src;
+}
+
+function closeCropModal() {
+  document.getElementById('cropModal').classList.remove('open');
+}
+
+function drawCrop() {
+  const canvas = document.getElementById('cropCanvas');
+  const wrap = document.getElementById('cropWrap');
+  const size = wrap.offsetWidth || 300;
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
+  const iw = cropImg.width * cropScale;
+  const ih = cropImg.height * cropScale;
+  const cx = size / 2 + cropX;
+  const cy = size / 2 + cropY;
+  ctx.drawImage(cropImg, cx - iw/2, cy - ih/2, iw, ih);
+}
+
+function applyCrop() {
+  const canvas = document.getElementById('cropCanvas');
+  croppedDataURL = canvas.toDataURL('image/jpeg', 0.85);
+  document.getElementById('imgUploadArea').innerHTML = `<img src="${croppedDataURL}" alt="">`;
+  closeCropModal();
+}
+
+// マウス操作
+const cw = document.getElementById('cropWrap');
+cw.addEventListener('mousedown', e => {
+  isDragging = true;
+  dragStart = {x: e.clientX, y: e.clientY};
+  imgStartPos = {x: cropX, y: cropY};
+  cw.style.cursor = 'grabbing';
+});
+cw.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  cropX = imgStartPos.x + (e.clientX - dragStart.x);
+  cropY = imgStartPos.y + (e.clientY - dragStart.y);
+  drawCrop();
+});
+cw.addEventListener('mouseup', () => { isDragging = false; cw.style.cursor = 'grab'; });
+cw.addEventListener('mouseleave', () => { isDragging = false; cw.style.cursor = 'grab'; });
+cw.addEventListener('wheel', e => {
+  e.preventDefault();
+  cropScale = Math.max(0.1, Math.min(8, cropScale * (1 - e.deltaY * 0.001)));
+  drawCrop();
+}, {passive: false});
+
+// タッチ操作
+cw.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    dragStart = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+    imgStartPos = {x: cropX, y: cropY};
+    lastPinchDist = null;
+  } else if (e.touches.length === 2) {
+    isDragging = false;
+    lastPinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, {passive: true});
+
+cw.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    if (lastPinchDist) {
+      cropScale = Math.max(0.1, Math.min(8, cropScale * dist / lastPinchDist));
+    }
+    lastPinchDist = dist;
+    drawCrop(); return;
+  }
+  if (!isDragging || e.touches.length !== 1) return;
+  cropX = imgStartPos.x + (e.touches[0].clientX - dragStart.x);
+  cropY = imgStartPos.y + (e.touches[0].clientY - dragStart.y);
+  drawCrop();
+}, {passive: true});
+
+cw.addEventListener('touchend', () => { isDragging = false; lastPinchDist = null; });
+
+// ===== 起動 =====
+render();
+</script>
+</body>
+</html>
