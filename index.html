@@ -6,493 +6,193 @@
 <title>Water</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif; background:#fff; color:#1a1a1a; min-height:100vh; overflow-x:hidden; }
 
-body {
-  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-  background: #ffffff;
-  color: #1a1a1a;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+#bgLayer { position:fixed; inset:0; z-index:0; background-size:cover; background-position:center; pointer-events:none; }
 
-/* ===== 背景 ===== */
-#bgLayer {
-  position: fixed; inset: 0; z-index: 0;
-  background-size: cover; background-position: center;
-  pointer-events: none;
-}
+/* ページ */
+.page { position:relative; z-index:1; max-width:480px; margin:0 auto; min-height:100vh; display:none; padding-bottom:40px; }
+.page.active { display:block; }
+#pageTop { display:none; flex-direction:column; height:100vh; overflow:hidden; }
+#pageTop.active { display:flex; padding-bottom:0; }
 
-/* ===== ページ切り替え ===== */
-.page {
-  position: relative; z-index: 1;
-  max-width: 480px; margin: 0 auto;
-  min-height: 100vh;
-  display: none;
-  padding-bottom: 40px;
-}
-.page.active { display: block; }
-#pageTop {
-  display: none;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-#pageTop.active {
-  display: flex;
-  padding-bottom: 0;
-}
+/* ヘッダー */
+.header { position:sticky; top:0; z-index:50; background:transparent; padding:16px 16px 12px; display:flex; align-items:center; justify-content:space-between; }
+.header-title { font-size:22px; font-weight:800; letter-spacing:-0.5px; color:var(--tc, #1a1a1a); }
+.header-btns { display:flex; gap:8px; align-items:center; }
+#pageTop .header { justify-content:center; position:relative; flex-shrink:0; }
+#pageTop .header .header-btns { position:absolute; right:16px; }
 
-/* ===== 共通ヘッダー ===== */
-.header {
-  position: sticky; top: 0; z-index: 50;
-  background: transparent;
-  padding: 16px 16px 12px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.header-title {
-  font-size: 22px; font-weight: 800;
-  letter-spacing: -0.5px; color: #1a1a1a;
-}
-/* トップページのヘッダーは中央揃え・固定 */
-#pageTop .header {
-  justify-content: center;
-  position: relative;
-  flex-shrink: 0;
-}
-#pageTop .header .header-btns {
-  position: absolute; right: 16px;
-}
-.header-btns { display: flex; gap: 8px; align-items: center; }
+/* ボタン */
+.btn { font-size:13px; font-weight:600; padding:7px 16px; border-radius:20px; border:1.5px solid #ccc; background:rgba(255,255,255,0.9); color:#333; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.btn:active { transform:scale(0.96); }
+.btn.green { background:#406843; border-color:#406843; color:#fff; }
+.btn.green:active { background:#2f4f32; }
+.btn.edit-active { background:#e8f5e0; border-color:#406843; color:#406843; }
+.icon-btn { width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,0.15); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; transition:background 0.15s; }
+.icon-btn:active { background:rgba(255,255,255,0.3); transform:scale(0.93); }
 
-/* ===== ボタン共通 ===== */
-.btn {
-  font-size: 13px; font-weight: 600;
-  padding: 7px 16px;
-  border-radius: 20px;
-  border: 1.5px solid #ccc;
-  background: rgba(255,255,255,0.9);
-  color: #333;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.btn:active { transform: scale(0.96); }
-.btn.green { background: #406843; border-color: #406843; color: #fff; }
-.btn.green:active { background: #2f4f32; }
-.btn.edit-active { background: #e8f5e0; border-color: #406843; color: #406843; }
-.icon-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  border: none; background: rgba(255,255,255,0.8);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; cursor: pointer;
-  transition: background 0.15s;
-}
-.icon-btn:active { background: #eee; transform: scale(0.93); }
+/* 天気 */
+.top-fixed { flex-shrink:0; z-index:10; }
+.weather-section { padding:16px 16px 8px; }
+.weather-location { font-size:13px; color:var(--tc-sub,#666); margin-bottom:4px; }
+.weather-temp-big { font-size:72px; font-weight:800; line-height:1; letter-spacing:-3px; color:var(--tc,#1a1a1a); margin-bottom:12px; }
+.week-calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px; }
+.day-col { display:flex; flex-direction:column; align-items:center; padding:10px 4px; border-radius:999px; border:1px solid var(--day-border,#e8e8e8); background:var(--day-bg,rgba(255,255,255,0.7)); gap:3px; }
+.day-col.today { background:#1a1a1a !important; border-color:#1a1a1a !important; }
+.day-col .day-name { font-size:10px; font-weight:600; color:var(--tc-sub,#888); }
+.day-col.today .day-name { color:#aaa; }
+.day-col .day-hi { font-size:12px; font-weight:700; color:var(--tc,#1a1a1a); }
+.day-col.today .day-hi { color:#fff; }
+.day-col .day-lo { font-size:10px; color:var(--tc-sub,#888); }
+.day-col.today .day-lo { color:#aaa; }
+.day-col .day-icon { font-size:14px; }
 
-/* ===== トップページ ===== */
-/* 天気エリア */
-.weather-section {
-  padding: 16px 16px 8px;
-}
-.weather-location {
-  font-size: 13px; color: #666; margin-bottom: 4px;
-}
-.weather-temp-big {
-  font-size: 120px; font-weight: 800;
-  line-height: 1; letter-spacing: -3px;
-  color: #1a1a1a; margin-bottom: 12px;
-}
-.weather-temp-big span { font-size: 48px; }
+/* フォルダグリッド */
+.folder-scroll { flex:1; overflow-y:auto; padding:0 16px 40px; -webkit-overflow-scrolling:touch; }
+.folder-section-title { font-size:11px; font-weight:700; color:var(--tc-sub,#999); margin-bottom:10px; letter-spacing:1.2px; }
+.folder-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.folder-btn { aspect-ratio:5/4; border-radius:18px; border:none; color:#fff; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:14px; position:relative; overflow:hidden; transition:transform 0.15s,filter 0.15s; -webkit-user-select:none; user-select:none; text-align:left; }
+.folder-btn:active { transform:scale(0.97); }
+.folder-btn.pressing { filter:brightness(1.2); }
+.folder-btn .folder-name { font-size:15px; font-weight:700; line-height:1.2; }
+.folder-btn .folder-count { font-size:11px; opacity:0.75; margin-top:2px; }
+.folder-btn .folder-press-bar { position:absolute; bottom:0; left:0; height:4px; background:rgba(255,255,255,0.6); border-radius:0 0 0 18px; width:0%; transition:none; }
+.folder-add-btn { aspect-ratio:5/4; border-radius:18px; border:2px dashed #ccc; background:rgba(240,240,240,0.6); color:#aaa; font-size:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
+.folder-add-btn:active { background:#e8e8e8; }
 
-/* 週カレンダー */
-.week-calendar {
-  display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 4px; margin-bottom: 4px;
-}
-.day-col {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 10px 4px;
-  border-radius: 999px;
-  border: 1px solid #e8e8e8;
-  background: rgba(255,255,255,0.7);
-  gap: 3px;
-}
-.day-col.today {
-  background: #1a1a1a; border-color: #1a1a1a;
-}
-.day-col .day-name {
-  font-size: 10px; font-weight: 600; color: #888;
-}
-.day-col.today .day-name { color: #aaa; }
-.day-col .day-hi {
-  font-size: 12px; font-weight: 700; color: #1a1a1a;
-}
-.day-col.today .day-hi { color: #fff; }
-.day-col .day-lo {
-  font-size: 10px; color: #888;
-}
-.day-col.today .day-lo { color: #aaa; }
-.day-col .day-icon { font-size: 14px; }
+/* 植物カード */
+.plant-list { padding:12px 12px 0; display:flex; flex-direction:column; gap:10px; }
+.empty-msg { text-align:center; padding:48px 24px; color:#aaa; font-size:14px; line-height:1.8; }
+.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:#406843; cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; }
+.plant-card:active { transform:scale(0.98); }
+.plant-card.watered { background:#73bfe6; }
+.plant-card.overdue { background:#406843; }
+.plant-card.edit-mode { outline:2px dashed rgba(255,255,255,0.6); }
+.plant-card.selected { outline:3px solid #fff; }
+.undo-bar { position:absolute; bottom:0; left:0; height:3px; background:rgba(255,255,255,0.7); border-radius:0 0 0 16px; }
+.plant-img { width:72px; height:72px; flex-shrink:0; border-radius:12px; background:rgba(255,255,255,0.2); border:none; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:32px; }
+.plant-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.plant-info { flex:1; min-width:0; }
+.plant-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.plant-badges { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.badge { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; background:rgba(255,255,255,0.25); color:#fff; }
+.delete-btn { position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.3); color:#fff; border:none; cursor:pointer; font-size:16px; font-weight:700; display:none; align-items:center; justify-content:center; line-height:1; }
+.edit-mode .delete-btn { display:flex; }
+.card-checkbox { position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,0.8); background:rgba(0,0,0,0.2); display:none; align-items:center; justify-content:center; font-size:13px; color:#fff; }
+.edit-mode .card-checkbox { display:flex; }
+.edit-mode .delete-btn { display:none; }
+.card-checkbox.checked { background:#fff; color:#406843; }
+.edit-hint { text-align:center; font-size:12px; color:#aaa; padding:8px 0 0; }
 
-/* フォルダセクション */
-.top-fixed {
-  flex-shrink: 0;
-  z-index: 10;
-}
-.folder-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 16px 40px;
-  -webkit-overflow-scrolling: touch;
-}
-.folder-section-title {
-  font-size: 11px; font-weight: 700; color: #999;
-  margin-bottom: 10px; letter-spacing: 1.2px;
-  text-transform: uppercase;
-}
-.folder-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.folder-btn {
-  aspect-ratio: 5/4;
-  border-radius: 18px;
-  border: none;
-  background: #406843;
-  color: #fff;
-  font-size: 16px; font-weight: 700;
-  cursor: pointer;
-  display: flex; flex-direction: column;
-  align-items: flex-start; justify-content: flex-end;
-  padding: 14px;
-  position: relative; overflow: hidden;
-  transition: transform 0.15s, filter 0.15s;
-  -webkit-user-select: none; user-select: none;
-  text-align: left;
-}
-.folder-btn:active { transform: scale(0.97); }
-.folder-btn.pressing {
-  filter: brightness(1.2);
-}
-.folder-btn .folder-name { font-size: 15px; font-weight: 700; line-height: 1.2; }
-.folder-btn .folder-count { font-size: 11px; opacity: 0.75; margin-top: 2px; }
-.folder-btn .folder-press-bar {
-  position: absolute; bottom: 0; left: 0;
-  height: 4px; background: rgba(255,255,255,0.6);
-  border-radius: 0 0 0 18px;
-  width: 0%; transition: none;
-}
-.folder-add-btn {
-  aspect-ratio: 5/4;
-  border-radius: 18px;
-  border: 2px dashed #ccc;
-  background: rgba(240,240,240,0.6);
-  color: #aaa;
-  font-size: 28px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
-}
-.folder-add-btn:active { background: #e8e8e8; }
+/* 編集バーアクション */
+.edit-action-bar { display:none; padding:10px 12px; gap:8px; background:rgba(255,255,255,0.95); border-top:1px solid #eee; position:sticky; bottom:0; z-index:20; }
+.edit-action-bar.show { display:flex; }
+.edit-action-bar .btn { flex:1; text-align:center; }
 
-/* ===== フォルダページ ===== */
-.plant-list { padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
-.empty-msg {
-  text-align: center; padding: 48px 24px;
-  color: #aaa; font-size: 14px; line-height: 1.8;
-}
-.plant-card {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px;
-  border-radius: 16px;
-  border: none;
-  background: #406843;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  position: relative;
-  -webkit-user-select: none; user-select: none;
-  overflow: hidden;
-}
-.plant-card:active { transform: scale(0.98); }
-.plant-card.watered { background: #73bfe6; }
-.plant-card.edit-mode { outline: 2px dashed rgba(255,255,255,0.6); }
+/* 設定 */
+.settings-section { padding:16px; }
+.settings-label { font-size:13px; font-weight:600; color:#888; margin-bottom:8px; margin-top:20px; }
+.settings-label:first-child { margin-top:0; }
+.settings-input { width:100%; font-size:16px; padding:12px 14px; border-radius:14px; border:1.5px solid #e0e0e0; background:#fafafa; color:#1a1a1a; outline:none; }
+.settings-input:focus { border-color:#406843; }
+.bg-upload-area { width:100%; aspect-ratio:9/5; border:2px dashed #ccc; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; position:relative; }
+.bg-upload-area img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#111; }
+.bg-upload-area span { font-size:13px; color:#aaa; }
+.bg-delete-btn { position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.settings-save-btn { width:100%; margin-top:24px; padding:14px; border-radius:14px; background:#406843; border:none; color:#fff; font-size:16px; font-weight:700; cursor:pointer; }
+.settings-save-btn:active { background:#2f4f32; }
 
-.undo-bar {
-  position: absolute; bottom: 0; left: 0;
-  height: 3px; background: rgba(255,255,255,0.7);
-  border-radius: 0 0 0 16px;
-}
+/* モーダル共通 */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:flex-end; justify-content:center; z-index:300; }
+.modal-overlay.open { display:flex; }
+.modal { background:#fff; border-radius:24px 24px 0 0; padding:20px 20px calc(24px + env(safe-area-inset-bottom)); width:100%; max-width:480px; max-height:90vh; overflow-y:auto; }
+.modal-handle { width:36px; height:4px; border-radius:2px; background:#ddd; margin:0 auto 16px; }
+.modal h2 { font-size:17px; font-weight:700; color:#1a1a1a; margin-bottom:16px; }
+.modal label { font-size:13px; color:#406843; font-weight:600; display:block; margin:14px 0 6px; }
+.modal input[type="text"] { width:100%; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none; }
+.modal input[type="text"]:focus { border-color:#406843; }
+.modal input[type="number"] { width:80px; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none; }
+.img-upload-area { width:140px; height:140px; border:2px dashed #ccc; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; margin:6px 0; position:relative; }
+.img-upload-area img { width:100%; height:100%; object-fit:cover; }
+.img-upload-area span { font-size:12px; color:#aaa; text-align:center; padding:12px; line-height:1.5; }
+.img-delete-btn { position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.55); color:#fff; border:none; cursor:pointer; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:10; }
+.modal-actions { display:flex; gap:10px; margin-top:20px; }
+.modal-actions .btn { flex:1; text-align:center; border-radius:12px; padding:12px; font-size:15px; }
+.btn-cancel2 { background:#f0f0f0; border-color:#ddd; color:#666; }
 
-.plant-img {
-  width: 72px; height: 72px; flex-shrink: 0;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.2);
-  border: none;
-  overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 32px;
-}
-.plant-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-.plant-info { flex: 1; min-width: 0; }
-.plant-name {
-  font-size: 16px; font-weight: 700; color: #fff;
-  margin-bottom: 6px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.plant-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.badge {
-  font-size: 11px; font-weight: 600;
-  padding: 3px 9px; border-radius: 20px;
-  white-space: nowrap;
-  background: rgba(255,255,255,0.25); color: #fff;
-}
-
-.delete-btn {
-  position: absolute; top: 8px; right: 8px;
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.3); color: #fff;
-  border: none; cursor: pointer;
-  font-size: 16px; font-weight: 700;
-  display: none;
-  align-items: center; justify-content: center;
-  line-height: 1;
-}
-.edit-mode .delete-btn { display: flex; }
-.edit-hint {
-  text-align: center; font-size: 12px; color: #aaa;
-  padding: 8px 0 0;
-}
-
-/* ===== 設定ページ ===== */
-.settings-section { padding: 16px; }
-.settings-label {
-  font-size: 13px; font-weight: 600; color: #888;
-  margin-bottom: 8px; margin-top: 20px;
-}
-.settings-label:first-child { margin-top: 0; }
-.settings-input {
-  width: 100%; font-size: 16px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1.5px solid #e0e0e0;
-  background: #fafafa;
-  color: #1a1a1a; outline: none;
-}
-.settings-input:focus { border-color: #406843; }
-.bg-upload-area {
-  width: 100%;
-  aspect-ratio: 9/5;
-  border: 2px dashed #ccc;
-  border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; overflow: hidden;
-  background: #fafafa;
-  position: relative;
-}
-.bg-upload-area img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: contain;
-  background: #111;
-}
-.bg-upload-area span { font-size: 13px; color: #aaa; }
-.bg-delete-btn {
-  position: absolute; top: 8px; right: 8px;
-  background: rgba(0,0,0,0.5); color: #fff;
-  border: none; border-radius: 50%;
-  width: 26px; height: 26px;
-  font-size: 14px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-.settings-save-btn {
-  width: 100%; margin-top: 24px;
-  padding: 14px; border-radius: 14px;
-  background: #406843; border: none;
-  color: #fff; font-size: 16px; font-weight: 700;
-  cursor: pointer;
-}
-.settings-save-btn:active { background: #2f4f32; }
-.settings-danger-btn {
-  width: 100%; margin-top: 10px;
-  padding: 12px; border-radius: 14px;
-  background: #fff; border: 1.5px solid #ffaaaa;
-  color: #c0392b; font-size: 14px; font-weight: 600;
-  cursor: pointer;
-}
-
-/* ===== モーダル共通 ===== */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: none; align-items: flex-end; justify-content: center;
-  z-index: 300;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: #fff;
-  border-radius: 24px 24px 0 0;
-  padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
-  width: 100%; max-width: 480px;
-  max-height: 90vh; overflow-y: auto;
-}
-.modal-handle {
-  width: 36px; height: 4px; border-radius: 2px;
-  background: #ddd; margin: 0 auto 16px;
-}
-.modal h2 { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 16px; }
-.modal label { font-size: 13px; color: #406843; font-weight: 600; display: block; margin: 14px 0 6px; }
-.modal input[type="text"] {
-  width: 100%; font-size: 16px;
-  padding: 10px 14px; border-radius: 12px;
-  border: 1.5px solid #ddd; background: #fafafa;
-  color: #1a1a1a; outline: none;
-}
-.modal input[type="text"]:focus { border-color: #406843; }
-.img-upload-area {
-  width: 140px; height: 140px;
-  border: 2px dashed #ccc; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; overflow: hidden; background: #fafafa;
-  margin: 6px 0; position: relative;
-}
-.img-upload-area img { width: 100%; height: 100%; object-fit: cover; }
-.img-upload-area span { font-size: 12px; color: #aaa; text-align: center; padding: 12px; line-height: 1.5; }
-.img-delete-btn {
-  position: absolute; top: 6px; right: 6px;
-  width: 24px; height: 24px; border-radius: 50%;
-  background: rgba(0,0,0,0.55); color: #fff;
-  border: none; cursor: pointer; font-size: 14px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center; z-index: 10;
-}
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-.modal-actions .btn { flex: 1; text-align: center; border-radius: 12px; padding: 12px; font-size: 15px; }
-.btn-cancel2 { background: #f0f0f0; border-color: #ddd; color: #666; }
+/* 水やりカレンダー */
+.water-calendar { margin-top:8px; }
+.water-cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.water-cal-title { font-size:14px; font-weight:700; color:#1a1a1a; }
+.water-cal-nav { background:none; border:none; font-size:18px; cursor:pointer; padding:4px 8px; color:#666; }
+.water-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.water-cal-day-name { font-size:10px; text-align:center; color:#aaa; padding:2px 0; font-weight:600; }
+.water-cal-day { font-size:12px; text-align:center; padding:5px 2px; border-radius:50%; cursor:default; color:#666; min-height:28px; display:flex; align-items:center; justify-content:center; }
+.water-cal-day.watered { background:#406843; color:#fff; border-radius:50%; font-weight:700; }
+.water-cal-day.today { border:2px solid #406843; color:#406843; font-weight:700; }
+.water-cal-day.watered.today { background:#406843; color:#fff; border:2px solid #1a1a1a; }
+.water-cal-day.empty { visibility:hidden; }
 
 /* クロップ */
-.crop-modal {
-  background: #fff; border-radius: 24px 24px 0 0;
-  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-  width: 100%; max-width: 480px;
-}
-.crop-canvas-wrap {
-  width: 100%; aspect-ratio: 1/1;
-  overflow: hidden; border-radius: 14px;
-  background: #222; cursor: grab; touch-action: none;
-}
-.crop-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
-.crop-hint { font-size: 12px; color: #aaa; text-align: center; margin-top: 8px; }
-
-/* フォルダ編集モーダル */
-.folder-modal-colors {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;
-}
-.color-swatch {
-  width: 32px; height: 32px; border-radius: 50%;
-  cursor: pointer; border: 3px solid transparent;
-  transition: border-color 0.15s;
-}
-.color-swatch.selected { border-color: #1a1a1a; }
-
-@keyframes ripple {
-  0% { transform: scale(0.95); opacity: 1; }
-  100% { transform: scale(1.02); opacity: 0; }
-}
-.rippling::after {
-  content: ''; position: absolute; inset: 0;
-  border-radius: 16px;
-  border: 2px solid rgba(255,255,255,0.8);
-  animation: ripple 0.4s ease-out forwards;
-  pointer-events: none;
-}
+.crop-modal { background:#fff; border-radius:24px 24px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); width:100%; max-width:480px; }
+.crop-canvas-wrap { width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:14px; background:#222; cursor:grab; touch-action:none; }
+.crop-canvas-wrap canvas { display:block; width:100%; height:100%; }
+.crop-hint { font-size:12px; color:#aaa; text-align:center; margin-top:8px; }
 
 /* フォルダ長押しメニュー */
-.folder-menu-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: none; align-items: flex-end; justify-content: center;
-  z-index: 400;
-}
-.folder-menu-overlay.open { display: flex; }
-.folder-menu {
-  background: #fff;
-  border-radius: 24px 24px 0 0;
-  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
-  width: 100%; max-width: 480px;
-}
-.folder-menu-title {
-  font-size: 13px; font-weight: 700; color: #aaa;
-  text-align: center; margin-bottom: 12px;
-  letter-spacing: 0.3px;
-}
-.folder-menu-item {
-  width: 100%; padding: 16px;
-  border: none; border-radius: 14px;
-  background: #f5f5f5; color: #1a1a1a;
-  font-size: 16px; font-weight: 600;
-  cursor: pointer; margin-bottom: 8px;
-  text-align: left; display: flex; align-items: center; gap: 12px;
-  transition: background 0.15s;
-}
-.folder-menu-item:active { background: #eaeaea; }
-.folder-menu-item.danger { color: #c0392b; background: #fff5f5; }
-.folder-menu-item.danger:active { background: #ffe0e0; }
-.folder-menu-cancel {
-  width: 100%; padding: 16px;
-  border: none; border-radius: 14px;
-  background: #f0f0f0; color: #666;
-  font-size: 16px; font-weight: 600;
-  cursor: pointer; margin-top: 4px;
-}
+.folder-menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:flex-end; justify-content:center; z-index:400; }
+.folder-menu-overlay.open { display:flex; }
+.folder-menu { background:#fff; border-radius:24px 24px 0 0; padding:16px 16px calc(24px + env(safe-area-inset-bottom)); width:100%; max-width:480px; max-height:90vh; overflow-y:auto; }
+.folder-menu-title { font-size:13px; font-weight:700; color:#aaa; text-align:center; margin-bottom:12px; }
+.folder-menu-item { width:100%; padding:14px 16px; border:none; border-radius:14px; background:#f5f5f5; color:#1a1a1a; font-size:15px; font-weight:600; cursor:pointer; margin-bottom:8px; text-align:left; display:flex; align-items:center; gap:12px; transition:background 0.15s; }
+.folder-menu-item:active { background:#eaeaea; }
+.folder-menu-item.danger { color:#c0392b; background:#fff5f5; font-size:13px; padding:10px 16px; }
+.folder-menu-item.danger:active { background:#ffe0e0; }
+.folder-menu-cancel { width:100%; padding:14px; border:none; border-radius:14px; background:#f0f0f0; color:#666; font-size:15px; font-weight:600; cursor:pointer; margin-top:4px; }
 
-/* 一括水やり確認トースト */
-.toast {
-  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-  background: #1a1a1a; color: #fff;
-  padding: 12px 20px; border-radius: 20px;
-  font-size: 14px; font-weight: 600;
-  z-index: 500; opacity: 0;
-  transition: opacity 0.3s;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.toast.show { opacity: 1; }
+/* カラーピッカー */
+.color-swatch { width:32px; height:32px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:border-color 0.15s; flex-shrink:0; }
+.color-swatch.selected { border-color:#1a1a1a; }
+
+/* トースト */
+.toast { position:fixed; bottom:40px; left:50%; transform:translateX(-50%); background:#1a1a1a; color:#fff; padding:12px 20px; border-radius:20px; font-size:14px; font-weight:600; z-index:500; opacity:0; transition:opacity 0.3s; white-space:nowrap; pointer-events:none; }
+.toast.show { opacity:1; }
+
+@keyframes ripple { 0%{transform:scale(0.95);opacity:1} 100%{transform:scale(1.02);opacity:0} }
+.rippling::after { content:''; position:absolute; inset:0; border-radius:16px; border:2px solid rgba(255,255,255,0.8); animation:ripple 0.4s ease-out forwards; pointer-events:none; }
 </style>
 </head>
 <body>
-
 <div id="bgLayer"></div>
 <div id="toast" class="toast"></div>
 
-<!-- ===== トップページ ===== -->
+<!-- トップページ -->
 <div id="pageTop" class="page active">
   <div class="header">
     <div class="header-title">Water</div>
     <div class="header-btns">
-      <button class="icon-btn" onclick="goSettings()" title="設定">⚙️</button>
+      <button class="icon-btn" onclick="goSettings()">⚙️</button>
     </div>
   </div>
-
   <div class="top-fixed">
-    <div class="weather-section" style="padding:16px 16px 8px;">
+    <div class="weather-section">
       <div class="weather-location" id="weatherLocation">読み込み中...</div>
-      <div class="weather-temp-big" id="weatherTempBig">--<span>°</span></div>
+      <div class="weather-temp-big" id="weatherTempBig">--°</div>
       <div class="week-calendar" id="weekCalendar">
         <div style="grid-column:1/-1;text-align:center;color:#aaa;font-size:12px;padding:16px 0">天気を読み込み中...</div>
       </div>
     </div>
-    <div style="padding: 12px 16px 8px;">
+    <div style="padding:12px 16px 8px;">
       <div class="folder-section-title">CATEGORY</div>
     </div>
   </div>
-
   <div class="folder-scroll">
     <div class="folder-grid" id="folderGrid"></div>
   </div>
 </div>
 
-<!-- ===== フォルダページ ===== -->
+<!-- フォルダページ -->
 <div id="pageFolder" class="page">
   <div class="header">
     <button class="icon-btn" onclick="goTop()">←</button>
@@ -503,47 +203,60 @@ body {
     </div>
   </div>
   <div class="plant-list" id="plantList"></div>
-  <div id="editHint" class="edit-hint" style="display:none">カードをタップして編集・×で削除</div>
+  <div id="editHint" class="edit-hint" style="display:none">カードをタップして編集・長押しで編集モーダル</div>
+  <div class="edit-action-bar" id="editActionBar">
+    <button class="btn" onclick="selectAll()">すべて選択</button>
+    <button class="btn" onclick="revertSelected()">ひとつ前に戻す</button>
+  </div>
 </div>
 
-<!-- ===== 設定ページ ===== -->
+<!-- 設定ページ -->
 <div id="pageSettings" class="page">
   <div class="header">
     <button class="icon-btn" onclick="goTop()">←</button>
     <div class="header-title">設定</div>
   </div>
   <div class="settings-section">
-    <div class="settings-label">天気の場所（市区町村名）</div>
-    <input type="text" class="settings-input" id="settingLocation" placeholder="例：福岡市博多区">
-    <div class="settings-label">背景色（全ページ共通）</div>
-    <div id="bgColorPicker" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:4px;"></div>
-    <div class="settings-label">背景画像（背景色より優先されます）</div>
+    <div class="settings-label">天気の場所</div>
+    <input type="text" class="settings-input" id="settingLocation" placeholder="例：Fukuoka">
+    <div class="settings-label">背景色</div>
+    <div id="bgColorPicker" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;"></div>
+    <div class="settings-label">背景画像（背景色より優先）</div>
     <div class="bg-upload-area" id="bgUploadArea" onclick="document.getElementById('bgFileInput').click()">
       <span>📷 タップして画像を選択</span>
     </div>
     <input type="file" id="bgFileInput" accept="image/*" style="display:none" onchange="handleBgSelect(event)">
     <div class="settings-label">文字色</div>
-    <div style="display:flex; gap:10px;">
-      <button id="textColorBtn_auto" onclick="setTextColorMode('auto')" style="flex:1;padding:10px;border-radius:12px;border:2px solid #406843;background:#e8f5e0;color:#406843;font-size:13px;font-weight:700;cursor:pointer;">自動（背景に合わせる）</button>
-      <button id="textColorBtn_white" onclick="setTextColorMode('white')" style="flex:1;padding:10px;border-radius:12px;border:2px solid #ccc;background:#f5f5f5;color:#333;font-size:13px;font-weight:600;cursor:pointer;">常に白</button>
-      <button id="textColorBtn_black" onclick="setTextColorMode('black')" style="flex:1;padding:10px;border-radius:12px;border:2px solid #ccc;background:#f5f5f5;color:#333;font-size:13px;font-weight:600;cursor:pointer;">常に黒</button>
+    <div style="display:flex;gap:8px;">
+      <button id="tcBtn_auto" onclick="setTextColorMode('auto')" style="flex:1;padding:10px;border-radius:12px;border:2px solid #406843;background:#e8f5e0;color:#406843;font-size:13px;font-weight:700;cursor:pointer;">自動</button>
+      <button id="tcBtn_white" onclick="setTextColorMode('white')" style="flex:1;padding:10px;border-radius:12px;border:2px solid #ccc;background:#f5f5f5;color:#333;font-size:13px;font-weight:600;cursor:pointer;">常に白</button>
+      <button id="tcBtn_black" onclick="setTextColorMode('black')" style="flex:1;padding:10px;border-radius:12px;border:2px solid #ccc;background:#f5f5f5;color:#333;font-size:13px;font-weight:600;cursor:pointer;">常に黒</button>
     </div>
     <button class="settings-save-btn" onclick="saveSettings()">保存する</button>
-    <button class="settings-danger-btn" onclick="clearBg()">背景画像・背景色を削除</button>
   </div>
 </div>
 
-<!-- ===== 植物編集モーダル ===== -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal">
+<!-- 植物編集モーダル -->
+<div class="modal-overlay" id="editModal" onclick="handleModalOverlayClick(event,'editModal')">
+  <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <h2 id="modalTitle">植物を追加</h2>
     <label>名前</label>
     <input type="text" id="plantNameInput" placeholder="例：モンステラ">
-    <label id="waterDateLabel" style="display:none">最後に水やりした日</label>
-    <div id="waterDateRow" style="display:none; align-items:center; gap:8px; margin-bottom:4px;">
-      <input type="date" id="waterDateInput" style="flex:1; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none;">
-      <button onclick="clearWaterDate()" style="font-size:12px; padding:8px 12px; border-radius:10px; border:1px solid #ddd; background:#f5f5f5; color:#888; cursor:pointer; white-space:nowrap;">未記録に戻す</button>
+    <div id="waterDateSection" style="display:none">
+      <label>最後に水やりした日</label>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <input type="date" id="waterDateInput" style="flex:1;font-size:16px;padding:10px 14px;border-radius:12px;border:1.5px solid #ddd;background:#fafafa;color:#1a1a1a;outline:none;">
+        <button onclick="revertWaterDate()" style="font-size:12px;padding:8px 12px;border-radius:10px;border:1px solid #ddd;background:#f5f5f5;color:#888;cursor:pointer;white-space:nowrap;">ひとつ前に戻す</button>
+      </div>
+      <label>水やりサイクル（何日でカード色を戻す）</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="number" id="waterCycleInput" min="1" max="365" placeholder="例：3">
+        <span style="font-size:14px;color:#666;">日</span>
+        <button onclick="clearCycle()" style="font-size:12px;padding:8px 12px;border-radius:10px;border:1px solid #ddd;background:#f5f5f5;color:#888;cursor:pointer;white-space:nowrap;">設定なし</button>
+      </div>
+      <label>水やり履歴カレンダー</label>
+      <div class="water-calendar" id="waterCalendar"></div>
     </div>
     <label>画像（タップして選択）</label>
     <div class="img-upload-area" id="imgUploadArea" onclick="imgAreaTapped()">
@@ -557,23 +270,45 @@ body {
   </div>
 </div>
 
-<!-- ===== フォルダ追加/編集モーダル ===== -->
-<div class="modal-overlay" id="folderModal">
-  <div class="modal">
+<!-- フォルダ長押しメニュー -->
+<div class="folder-menu-overlay" id="folderMenuOverlay" onclick="handleModalOverlayClick(event,'folderMenuOverlay')">
+  <div class="folder-menu" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <h2 id="folderModalTitle">フォルダを追加</h2>
-    <label>名前</label>
-    <input type="text" id="folderNameInput" placeholder="例：リビング">
-    <label>カラー</label>
-    <div class="folder-modal-colors" id="folderColorPicker"></div>
-    <div class="modal-actions" id="folderModalActions">
-      <button class="btn btn-cancel2" onclick="closeFolderModal()">キャンセル</button>
-      <button class="btn green" onclick="saveFolder()">保存する</button>
+    <div class="folder-menu-title" id="folderMenuTitle"></div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:13px;color:#406843;font-weight:600;margin-bottom:6px;">名前</div>
+      <input type="text" id="folderMenuNameInput" placeholder="フォルダ名" style="width:100%;font-size:16px;padding:10px 14px;border-radius:12px;border:1.5px solid #ddd;background:#fafafa;color:#1a1a1a;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;color:#406843;font-weight:600;margin-bottom:8px;">カラー</div>
+      <div id="folderMenuColorPicker" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
+    <button class="folder-menu-item" onclick="folderMenuWater()">💧 一括水やり</button>
+    <button class="folder-menu-item danger" onclick="folderMenuDelete()">🗑️ フォルダを削除</button>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="folder-menu-cancel" style="flex:1" onclick="closeFolderMenu()">キャンセル</button>
+      <button style="flex:1;padding:14px;border:none;border-radius:14px;background:#406843;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" onclick="folderMenuSave()">保存</button>
     </div>
   </div>
 </div>
 
-<!-- ===== クロップモーダル ===== -->
+<!-- フォルダ追加モーダル -->
+<div class="modal-overlay" id="folderAddModal" onclick="handleModalOverlayClick(event,'folderAddModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <h2>フォルダを追加</h2>
+    <label>名前</label>
+    <input type="text" id="folderAddNameInput" placeholder="例：リビング">
+    <label>カラー</label>
+    <div id="folderAddColorPicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel2" onclick="closeFolderAddModal()">キャンセル</button>
+      <button class="btn green" onclick="saveFolderAdd()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- クロップモーダル -->
 <div class="modal-overlay" id="cropModal">
   <div class="crop-modal">
     <div class="modal-handle"></div>
@@ -587,834 +322,614 @@ body {
   </div>
 </div>
 
-<!-- ===== フォルダ長押しメニュー（編集統合） ===== -->
-<div class="folder-menu-overlay" id="folderMenuOverlay">
-  <div class="folder-menu">
-    <div class="modal-handle"></div>
-    <div class="folder-menu-title" id="folderMenuTitle">フォルダ名</div>
-    <div style="margin-bottom:12px;">
-      <div style="font-size:13px;color:#406843;font-weight:600;margin-bottom:6px;">名前</div>
-      <input type="text" id="folderMenuNameInput" placeholder="フォルダ名" style="width:100%;font-size:16px;padding:10px 14px;border-radius:12px;border:1.5px solid #ddd;background:#fafafa;color:#1a1a1a;outline:none;box-sizing:border-box;">
-    </div>
-    <div style="margin-bottom:16px;">
-      <div style="font-size:13px;color:#406843;font-weight:600;margin-bottom:8px;">カラー</div>
-      <div id="folderMenuColorPicker" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-    </div>
-    <button class="folder-menu-item" onclick="folderMenuWater()">💧 一括水やり</button>
-    <button class="folder-menu-item danger" onclick="folderMenuDelete()">🗑️ フォルダを削除</button>
-    <div style="display:flex;gap:10px;margin-top:8px;">
-      <button class="folder-menu-cancel" style="flex:1" onclick="closeFolderMenu()">キャンセル</button>
-      <button style="flex:1;padding:16px;border:none;border-radius:14px;background:#406843;color:#fff;font-size:16px;font-weight:700;cursor:pointer;" onclick="folderMenuSave()">保存</button>
-    </div>
-  </div>
-</div>
-
 <script>
-// ===========================
-// データ構造
+// =====================
+// データ
+// plants: [{id, folderId, name, img, lastWatered, waterHistory:[], waterCycle:null}]
 // folders: [{id, name, color}]
-// plants:  [{id, folderId, name, img, lastWatered}]
-// settings: {location, bgImg}
-// ===========================
+// settings: {location, bgImg, bgColor, textColorMode}
+// =====================
+let folders=[], plants=[], settings={location:'Fukuoka', bgImg:null, bgColor:null, textColorMode:'auto'};
 
-let folders = [];
-let plants = [];
-let settings = { location: '福岡市博多区', bgImg: null, bgColor: null, textColorMode: 'auto' };
-
-function loadData() {
-  try { folders = JSON.parse(localStorage.getItem('wc_folders') || '[]'); } catch(e) { folders = []; }
-  try { plants  = JSON.parse(localStorage.getItem('wc_plants2') || '[]'); } catch(e) { plants = []; }
-  try { const s = JSON.parse(localStorage.getItem('wc_settings') || '{}'); settings = Object.assign(settings, s); } catch(e) {}
+function loadData(){
+  try{ folders=JSON.parse(localStorage.getItem('wc_folders')||'[]'); }catch(e){ folders=[]; }
+  try{ plants=JSON.parse(localStorage.getItem('wc_plants3')||'[]'); }catch(e){ plants=[]; }
+  try{ const s=JSON.parse(localStorage.getItem('wc_settings2')||'{}'); settings=Object.assign(settings,s); }catch(e){}
+}
+function saveAll(){
+  try{ localStorage.setItem('wc_folders',JSON.stringify(folders)); }catch(e){}
+  try{ localStorage.setItem('wc_plants3',JSON.stringify(plants)); }catch(e){}
+  try{ localStorage.setItem('wc_settings2',JSON.stringify(settings)); }catch(e){}
 }
 
-function saveAll() {
-  try { localStorage.setItem('wc_folders', JSON.stringify(folders)); } catch(e) {}
-  try { localStorage.setItem('wc_plants2', JSON.stringify(plants)); } catch(e) {}
-  try { localStorage.setItem('wc_settings', JSON.stringify(settings)); } catch(e) {}
+// =====================
+// テーマ
+// =====================
+function applyBg(){
+  const layer=document.getElementById('bgLayer');
+  if(settings.bgImg){ layer.style.backgroundImage=`url(${settings.bgImg})`; layer.style.backgroundColor=settings.bgColor||'#fff'; }
+  else if(settings.bgColor){ layer.style.backgroundImage='none'; layer.style.backgroundColor=settings.bgColor; }
+  else{ layer.style.backgroundImage='none'; layer.style.backgroundColor='#fff'; }
+  applyTextColor();
+}
+function applyTextColor(){
+  const mode=settings.textColorMode||'auto';
+  let dark=false;
+  if(mode==='auto'){ dark=settings.bgImg ? true : (settings.bgColor ? isColorDark(settings.bgColor) : false); }
+  else if(mode==='white') dark=true;
+  const tc=dark?'#ffffff':'#1a1a1a';
+  const tcs=dark?'rgba(255,255,255,0.7)':'#666';
+  document.documentElement.style.setProperty('--tc',tc);
+  document.documentElement.style.setProperty('--tc-sub',tcs);
+  document.documentElement.style.setProperty('--day-border',dark?'rgba(255,255,255,0.25)':'#e8e8e8');
+  document.documentElement.style.setProperty('--day-bg',dark?'rgba(255,255,255,0.12)':'rgba(255,255,255,0.7)');
+}
+function isColorDark(hex){
+  const h=hex.replace('#','');
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  return (r*299+g*587+b*114)/1000<128;
 }
 
-// ===========================
+// =====================
 // ページ遷移
-// ===========================
-let currentFolderId = null;
-
-function goTop() {
+// =====================
+let currentFolderId=null;
+function goTop(){
+  ['pageTop','pageFolder','pageSettings'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('pageTop').classList.add('active');
-  document.getElementById('pageFolder').classList.remove('active');
-  document.getElementById('pageSettings').classList.remove('active');
   renderFolderGrid();
-  setTimeout(applyTextColor, 50);
+  setTimeout(applyTextColor,50);
 }
-
-function goFolder(folderId) {
-  currentFolderId = folderId;
-  const folder = folders.find(f => f.id === folderId);
-  document.getElementById('folderPageTitle').textContent = folder ? folder.name : '';
-  document.getElementById('pageTop').classList.remove('active');
+function goFolder(folderId){
+  currentFolderId=folderId;
+  const f=folders.find(x=>x.id===folderId);
+  document.getElementById('folderPageTitle').textContent=f?f.name:'';
+  ['pageTop','pageFolder','pageSettings'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('pageFolder').classList.add('active');
-  document.getElementById('pageSettings').classList.remove('active');
-  editMode = false;
-  document.getElementById('editBtn').textContent = '編集';
+  editMode=false; selectedCards=new Set();
+  document.getElementById('editBtn').textContent='編集';
   document.getElementById('editBtn').classList.remove('edit-active');
-  document.getElementById('editHint').style.display = 'none';
+  document.getElementById('editHint').style.display='none';
+  document.getElementById('editActionBar').classList.remove('show');
   renderPlants();
 }
-
-function goSettings() {
-  document.getElementById('pageTop').classList.remove('active');
-  document.getElementById('pageFolder').classList.remove('active');
+function goSettings(){
+  ['pageTop','pageFolder','pageSettings'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('pageSettings').classList.add('active');
   renderSettingsPage();
 }
 
-// ===========================
-// 背景・テーマ
-// ===========================
-function applyBg() {
-  const layer = document.getElementById('bgLayer');
-  if (settings.bgImg) {
-    layer.style.backgroundImage = `url(${settings.bgImg})`;
-    layer.style.backgroundColor = settings.bgColor || '#ffffff';
-  } else if (settings.bgColor) {
-    layer.style.backgroundImage = 'none';
-    layer.style.backgroundColor = settings.bgColor;
-  } else {
-    layer.style.backgroundImage = 'none';
-    layer.style.backgroundColor = '#ffffff';
-  }
-  applyTextColor();
+// =====================
+// モーダル外タップで閉じる
+// =====================
+function handleModalOverlayClick(e, modalId){
+  if(e.target.id===modalId) closeFunctions[modalId]&&closeFunctions[modalId]();
 }
-
-function applyTextColor() {
-  let mode = settings.textColorMode || 'auto';
-  let isDark = false;
-  if (mode === 'auto') {
-    // 背景画像あり or 暗い色 → 白文字
-    if (settings.bgImg) {
-      isDark = true;
-    } else if (settings.bgColor) {
-      isDark = isColorDark(settings.bgColor);
-    }
-  } else if (mode === 'white') {
-    isDark = true;
-  } else {
-    isDark = false;
-  }
-  const textColor = isDark ? '#ffffff' : '#1a1a1a';
-  const subColor  = isDark ? 'rgba(255,255,255,0.7)' : '#666';
-  document.documentElement.style.setProperty('--text-primary', textColor);
-  document.documentElement.style.setProperty('--text-sub', subColor);
-  // 直接適用
-  document.querySelectorAll('.header-title, .weather-temp-big, .weather-location, .folder-section-title')
-    .forEach(el => el.style.color = '');
-  document.body.style.color = textColor;
-  // 天気エリア
-  const loc = document.getElementById('weatherLocation');
-  const tmp = document.getElementById('weatherTempBig');
-  if (loc) loc.style.color = subColor;
-  if (tmp) tmp.style.color = textColor;
-  // 曜日カラム
-  document.querySelectorAll('.day-col:not(.today) .day-name, .day-col:not(.today) .day-lo')
-    .forEach(el => el.style.color = isDark ? 'rgba(255,255,255,0.6)' : '#888');
-  document.querySelectorAll('.day-col:not(.today) .day-hi')
-    .forEach(el => el.style.color = textColor);
-  document.querySelectorAll('.day-col:not(.today)')
-    .forEach(el => {
-      el.style.borderColor = isDark ? 'rgba(255,255,255,0.25)' : '#e8e8e8';
-      el.style.background = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.7)';
-    });
-}
-
-function isColorDark(hex) {
-  const h = hex.replace('#','');
-  const r = parseInt(h.slice(0,2),16);
-  const g = parseInt(h.slice(2,4),16);
-  const b = parseInt(h.slice(4,6),16);
-  return (r*299 + g*587 + b*114) / 1000 < 128;
-}
-
-// ===========================
-// 天気（Open-Meteo）
-// ===========================
-const WEATHER_ICONS = {
-  0:'☀️', 1:'🌤', 2:'⛅', 3:'☁️',
-  45:'🌫', 48:'🌫',
-  51:'🌦', 53:'🌦', 55:'🌦',
-  61:'🌧', 63:'🌧', 65:'🌧',
-  71:'❄️', 73:'❄️', 75:'❄️',
-  80:'🌦', 81:'🌧', 82:'🌧',
-  95:'⛈', 96:'⛈', 99:'⛈'
+const closeFunctions={
+  editModal: ()=>closeModal(),
+  folderMenuOverlay: ()=>closeFolderMenu(),
+  folderAddModal: ()=>closeFolderAddModal(),
 };
-const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-async function fetchWeather(locationName) {
-  try {
-    // geocoding
-    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1&language=ja`);
-    const geoData = await geoRes.json();
-    if (!geoData.results || !geoData.results.length) {
-      document.getElementById('weatherLocation').textContent = '場所が見つかりませんでした';
-      return;
+// =====================
+// 天気（過去+予報合成）
+// =====================
+const WEATHER_ICONS={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌦',61:'🌧',63:'🌧',65:'🌧',71:'❄️',73:'❄️',75:'❄️',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
+const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+async function fetchWeather(loc){
+  try{
+    const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(loc)}&count=1&language=ja`);
+    const geoData=await geoRes.json();
+    if(!geoData.results||!geoData.results.length){ document.getElementById('weatherLocation').textContent='場所が見つかりません'; return; }
+    const {latitude:lat,longitude:lon,name}=geoData.results[0];
+    document.getElementById('weatherLocation').textContent=name;
+
+    const now=new Date();
+    const todayDow=now.getDay(); // 0=Sun
+    // 今週の日曜
+    const sunday=new Date(now); sunday.setDate(now.getDate()-todayDow); sunday.setHours(0,0,0,0);
+    const saturdayStr=new Date(sunday); saturdayStr.setDate(sunday.getDate()+6);
+    const sundayStr=sunday.toISOString().slice(0,10);
+    const satStr=saturdayStr.toISOString().slice(0,10);
+
+    // 予報API（今日〜土曜）
+    const fUrl=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&current_weather=true&timezone=Asia%2FTokyo&forecast_days=7`;
+    const fRes=await fetch(fUrl); const fData=await fRes.json();
+    document.getElementById('weatherTempBig').textContent=`${Math.round(fData.current_weather.temperature)}°`;
+
+    const wMap={};
+    for(let i=0;i<fData.daily.time.length;i++){
+      wMap[fData.daily.time[i]]={hi:Math.round(fData.daily.temperature_2m_max[i]),lo:Math.round(fData.daily.temperature_2m_min[i]),icon:WEATHER_ICONS[fData.daily.weathercode[i]]||'🌡'};
     }
-    const { latitude, longitude, name } = geoData.results[0];
-    document.getElementById('weatherLocation').textContent = name;
 
-    // weather
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,weathercode&current_weather=true&timezone=Asia%2FTokyo`;
-    const wRes = await fetch(url);
-    const wData = await wRes.json();
-
-    const cur = wData.current_weather;
-    document.getElementById('weatherTempBig').innerHTML = `${Math.round(cur.temperature)}<span>°</span>`;
-
-    const daily = wData.daily;
-    const today = new Date().getDay();
-    const cal = document.getElementById('weekCalendar');
-    cal.innerHTML = daily.dates ? '' : '';
-
-    // 今日の曜日インデックス(0=Sun)
-    const todayDayIdx = new Date().getDay();
-    // APIデータをdateをキーにマップ化
-    const weatherMap = {};
-    for (let i = 0; i < daily.time.length; i++) {
-      weatherMap[daily.time[i]] = {
-        hi: Math.round(daily.temperature_2m_max[i]),
-        lo: Math.round(daily.temperature_2m_min[i]),
-        icon: WEATHER_ICONS[daily.weathercode[i]] || '🌡'
-      };
+    // 過去分が必要な場合（今日が日曜以外）
+    if(todayDow>0){
+      const yesterday=new Date(now); yesterday.setDate(now.getDate()-1);
+      const yStr=yesterday.toISOString().slice(0,10);
+      try{
+        const pUrl=`https://api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia%2FTokyo&start_date=${sundayStr}&end_date=${yStr}`;
+        const pRes=await fetch(pUrl); const pData=await pRes.json();
+        if(pData.daily) for(let i=0;i<pData.daily.time.length;i++){
+          wMap[pData.daily.time[i]]={hi:Math.round(pData.daily.temperature_2m_max[i]),lo:Math.round(pData.daily.temperature_2m_min[i]),icon:WEATHER_ICONS[pData.daily.weathercode[i]]||'🌡'};
+        }
+      }catch(e){}
     }
-    // 今週の日曜日から始まる7日を生成
-    const now = new Date();
-    const sundayOffset = now.getDay(); // 今日が何曜日か(0=Sun)
-    const sunday = new Date(now);
-    sunday.setDate(now.getDate() - sundayOffset);
-    let html = '';
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(sunday);
-      d.setDate(sunday.getDate() + i);
-      const dateKey = d.toISOString().slice(0, 10);
-      const isToday = d.toDateString() === now.toDateString();
-      const w = weatherMap[dateKey] || { hi: '--', lo: '--', icon: '🌡' };
-      html += `<div class="day-col${isToday ? ' today' : ''}">
+
+    // 日〜土を生成
+    let html='';
+    for(let i=0;i<7;i++){
+      const d=new Date(sunday); d.setDate(sunday.getDate()+i);
+      const key=d.toISOString().slice(0,10);
+      const isToday=d.toDateString()===now.toDateString();
+      const w=wMap[key]||{hi:'--',lo:'--',icon:'🌡'};
+      html+=`<div class="day-col${isToday?' today':''}">
         <div class="day-name">${DAY_NAMES[d.getDay()]}</div>
-        <div class="day-hi">${w.hi !== '--' ? w.hi + '°' : '--'}</div>
-        <div class="day-lo">${w.lo !== '--' ? w.lo + '°' : '--'}</div>
+        <div class="day-hi">${w.hi!=='--'?w.hi+'°':'--'}</div>
+        <div class="day-lo">${w.lo!=='--'?w.lo+'°':'--'}</div>
         <div class="day-icon">${w.icon}</div>
       </div>`;
     }
-    cal.innerHTML = html;
-  } catch(e) {
-    document.getElementById('weatherLocation').textContent = '天気の取得に失敗しました';
-  }
+    document.getElementById('weekCalendar').innerHTML=html;
+    applyTextColor();
+  }catch(e){ document.getElementById('weatherLocation').textContent='天気の取得に失敗しました'; }
 }
 
-// ===========================
+// =====================
 // フォルダグリッド
-// ===========================
-const FOLDER_COLORS = ['#406843','#2c5f7a','#7a3f2c','#5c3d7a','#7a6b2c','#2c7a5f','#7a2c4a','#3d3d3d'];
-let folderLongPressTimer = null;
-let folderPressFired = false;
-let folderPressBarTimer = null;
-const FOLDER_LONG_PRESS_MS = 700;
+// =====================
+const FOLDER_COLORS=['#406843','#2c5f7a','#7a3f2c','#5c3d7a','#7a6b2c','#2c7a5f','#7a2c4a','#3d3d3d'];
+let folderLongPressTimer=null, folderPressFired=false;
+const FOLDER_LP_MS=700;
 
-function renderFolderGrid() {
-  const grid = document.getElementById('folderGrid');
-  let html = folders.map(f => {
-    const count = plants.filter(p => p.folderId === f.id).length;
-    return `<button class="folder-btn" id="fb_${f.id}"
-      style="background:${f.color || '#406843'}"
+function renderFolderGrid(){
+  const grid=document.getElementById('folderGrid');
+  let html=folders.map(f=>{
+    const count=plants.filter(p=>p.folderId===f.id).length;
+    return `<button class="folder-btn" id="fb_${f.id}" style="background:${f.color||'#406843'}"
       onclick="handleFolderClick('${f.id}')"
-      oncontextmenu="handleFolderContextMenu(event,'${f.id}')"
-      ontouchstart="startFolderLongPress(event,'${f.id}')"
-      ontouchend="cancelFolderLongPress(event,'${f.id}')"
-      ontouchmove="cancelFolderLongPress(event,'${f.id}')">
+      oncontextmenu="handleFolderCtx(event,'${f.id}')"
+      ontouchstart="startFolderLP(event,'${f.id}')"
+      ontouchend="cancelFolderLP(event,'${f.id}')"
+      ontouchmove="cancelFolderLP(event,'${f.id}')">
       <div class="folder-press-bar" id="fpb_${f.id}"></div>
       <div class="folder-name">${escHtml(f.name)}</div>
       <div class="folder-count">${count}種類</div>
     </button>`;
   }).join('');
-  html += `<button class="folder-add-btn" onclick="openFolderModal()">＋</button>`;
-  grid.innerHTML = html;
+  html+=`<button class="folder-add-btn" onclick="openFolderAddModal()">＋</button>`;
+  grid.innerHTML=html;
 }
 
-function handleFolderClick(id) {
-  if (folderPressFired) return;
-  goFolder(id);
+function handleFolderClick(id){ if(!folderPressFired) goFolder(id); }
+function handleFolderCtx(e,id){ e.preventDefault(); openFolderMenu(id); }
+function startFolderLP(e,id){
+  folderPressFired=false;
+  const bar=document.getElementById('fpb_'+id), btn=document.getElementById('fb_'+id);
+  if(bar){ bar.style.transition='none'; bar.style.width='0%'; requestAnimationFrame(()=>{ bar.style.transition=`width ${FOLDER_LP_MS}ms linear`; bar.style.width='100%'; }); }
+  if(btn) btn.classList.add('pressing');
+  folderLongPressTimer=setTimeout(()=>{ folderPressFired=true; navigator.vibrate&&navigator.vibrate(40); if(btn) btn.classList.remove('pressing'); openFolderMenu(id); },FOLDER_LP_MS);
 }
-
-function handleFolderContextMenu(e, id) {
-  e.preventDefault();
-  openFolderMenu(id);
-}
-
-function startFolderLongPress(e, id) {
-  folderPressFired = false;
-  const bar = document.getElementById('fpb_' + id);
-  const btn = document.getElementById('fb_' + id);
-  if (bar) {
-    bar.style.transition = 'none';
-    bar.style.width = '0%';
-    requestAnimationFrame(() => {
-      bar.style.transition = `width ${FOLDER_LONG_PRESS_MS}ms linear`;
-      bar.style.width = '100%';
-    });
-  }
-  if (btn) btn.classList.add('pressing');
-
-  folderLongPressTimer = setTimeout(() => {
-    folderPressFired = true;
-    navigator.vibrate && navigator.vibrate(40);
-    if (btn) btn.classList.remove('pressing');
-    openFolderMenu(id);
-  }, FOLDER_LONG_PRESS_MS);
-}
-
-function cancelFolderLongPress(e, id) {
+function cancelFolderLP(e,id){
   clearTimeout(folderLongPressTimer);
-  const bar = document.getElementById('fpb_' + id);
-  const btn = document.getElementById('fb_' + id);
-  if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; }
-  if (btn) btn.classList.remove('pressing');
+  const bar=document.getElementById('fpb_'+id), btn=document.getElementById('fb_'+id);
+  if(bar){ bar.style.transition='none'; bar.style.width='0%'; }
+  if(btn) btn.classList.remove('pressing');
 }
 
-// ===========================
-// フォルダ長押しメニュー
-// ===========================
-let menuFolderId = null;
-let menuSelectedColor = FOLDER_COLORS[0];
+// =====================
+// フォルダメニュー
+// =====================
+let menuFolderId=null, menuSelColor=FOLDER_COLORS[0];
 
-function openFolderMenu(id) {
-  menuFolderId = id;
-  const f = folders.find(x => x.id === id);
-  document.getElementById('folderMenuTitle').textContent = f ? f.name : '';
-  document.getElementById('folderMenuNameInput').value = f ? f.name : '';
-  menuSelectedColor = f ? (f.color || FOLDER_COLORS[0]) : FOLDER_COLORS[0];
+function openFolderMenu(id){
+  menuFolderId=id;
+  const f=folders.find(x=>x.id===id);
+  document.getElementById('folderMenuTitle').textContent=f?f.name:'';
+  document.getElementById('folderMenuNameInput').value=f?f.name:'';
+  menuSelColor=f?f.color||FOLDER_COLORS[0]:FOLDER_COLORS[0];
   renderMenuColorPicker();
   document.getElementById('folderMenuOverlay').classList.add('open');
 }
-
-function closeFolderMenu() {
-  document.getElementById('folderMenuOverlay').classList.remove('open');
-  menuFolderId = null;
-}
-
-function renderMenuColorPicker() {
-  const picker = document.getElementById('folderMenuColorPicker');
-  picker.innerHTML = FOLDER_COLORS.map(col =>
-    `<div style="width:32px;height:32px;border-radius:50%;background:${col};cursor:pointer;border:3px solid ${col === menuSelectedColor ? '#1a1a1a' : 'transparent'};transition:border-color 0.15s;flex-shrink:0;"
-      onclick="menuSelectColor('${col}')"></div>`
+function closeFolderMenu(){ document.getElementById('folderMenuOverlay').classList.remove('open'); menuFolderId=null; }
+function renderMenuColorPicker(){
+  document.getElementById('folderMenuColorPicker').innerHTML=FOLDER_COLORS.map(c=>
+    `<div style="width:32px;height:32px;border-radius:50%;background:${c};cursor:pointer;border:3px solid ${c===menuSelColor?'#1a1a1a':'transparent'};flex-shrink:0;" onclick="menuSelColor='${c}';renderMenuColorPicker()"></div>`
   ).join('');
 }
-
-function menuSelectColor(col) {
-  menuSelectedColor = col;
-  renderMenuColorPicker();
-}
-
-function folderMenuSave() {
-  const name = document.getElementById('folderMenuNameInput').value.trim();
-  if (!name) { alert('名前を入力してください'); return; }
-  const f = folders.find(x => x.id === menuFolderId);
-  if (f) { f.name = name; f.color = menuSelectedColor; }
+function folderMenuSave(){
+  const name=document.getElementById('folderMenuNameInput').value.trim();
+  if(!name){ alert('名前を入力してください'); return; }
+  const f=folders.find(x=>x.id===menuFolderId);
+  if(f){ f.name=name; f.color=menuSelColor; }
   saveAll(); closeFolderMenu(); renderFolderGrid();
 }
-
-function folderMenuWater() {
-  const id = menuFolderId;
-  closeFolderMenu();
-  waterAllInFolder(id);
+function folderMenuWater(){
+  const id=menuFolderId; closeFolderMenu();
+  const fps=plants.filter(p=>p.folderId===id);
+  if(!fps.length){ showToast('植物が登録されていません'); return; }
+  const now=Date.now();
+  fps.forEach(p=>{ if(!p.waterHistory) p.waterHistory=[]; p.waterHistory.push(now); p.lastWatered=now; });
+  saveAll(); renderFolderGrid();
+  const f=folders.find(x=>x.id===id);
+  showToast(`💧 ${f?f.name:''} の${fps.length}種類に水やりしました`);
 }
-
-function folderMenuDelete() {
-  const id = menuFolderId;
-  closeFolderMenu();
-  const f = folders.find(x => x.id === id);
-  const count = plants.filter(p => p.folderId === id).length;
-  const msg = count > 0
-    ? `「${f ? f.name : ''}」を削除すると中の植物${count}種類も削除されます。よろしいですか？`
-    : `「${f ? f.name : ''}」を削除しますか？`;
-  if (!confirm(msg)) return;
-  folders = folders.filter(x => x.id !== id);
-  plants = plants.filter(p => p.folderId !== id);
+function folderMenuDelete(){
+  const id=menuFolderId; closeFolderMenu();
+  const f=folders.find(x=>x.id===id);
+  const count=plants.filter(p=>p.folderId===id).length;
+  if(!confirm(count>0?`「${f?f.name:''}」を削除すると中の植物${count}種類も削除されます。よろしいですか？`:`「${f?f.name:''}」を削除しますか？`)) return;
+  folders=folders.filter(x=>x.id!==id);
+  plants=plants.filter(p=>p.folderId!==id);
   saveAll(); renderFolderGrid();
 }
 
-function waterAllInFolder(folderId) {
-  const folder = folders.find(f => f.id === folderId);
-  const folderPlants = plants.filter(p => p.folderId === folderId);
-  if (!folderPlants.length) {
-    showToast('植物が登録されていません');
-    return;
-  }
-  const now = Date.now();
-  folderPlants.forEach(p => { p.lastWatered = now; });
-  saveAll();
-  renderFolderGrid();
-  showToast(`💧 ${folder ? folder.name : ''} の${folderPlants.length}種類に水やりしました`);
+// フォルダ追加
+let addSelColor=FOLDER_COLORS[0];
+function openFolderAddModal(){
+  addSelColor=FOLDER_COLORS[0];
+  document.getElementById('folderAddNameInput').value='';
+  renderAddColorPicker();
+  document.getElementById('folderAddModal').classList.add('open');
+  setTimeout(()=>document.getElementById('folderAddNameInput').focus(),300);
 }
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// ===========================
-// フォルダモーダル
-// ===========================
-let editingFolderId = null;
-let selectedColor = FOLDER_COLORS[0];
-
-function openFolderModal() {
-  editingFolderId = null;
-  document.getElementById('folderModalTitle').textContent = 'フォルダを追加';
-  document.getElementById('folderNameInput').value = '';
-  selectedColor = FOLDER_COLORS[0];
-  renderColorPicker();
-  // 削除ボタンを非表示
-  const extra = document.getElementById('folderDeleteBtn');
-  if (extra) extra.remove();
-  document.getElementById('folderModal').classList.add('open');
-  setTimeout(() => document.getElementById('folderNameInput').focus(), 300);
-}
-
-function openFolderEditModal(id) {
-  editingFolderId = id;
-  const f = folders.find(x => x.id === id);
-  if (!f) return;
-  document.getElementById('folderModalTitle').textContent = 'フォルダを編集';
-  document.getElementById('folderNameInput').value = f.name;
-  selectedColor = f.color || FOLDER_COLORS[0];
-  renderColorPicker();
-  // 削除ボタン
-  if (!document.getElementById('folderDeleteBtn')) {
-    const btn = document.createElement('button');
-    btn.id = 'folderDeleteBtn';
-    btn.textContent = 'フォルダを削除';
-    btn.className = 'settings-danger-btn';
-    btn.style.marginTop = '12px';
-    btn.onclick = deleteFolder;
-    document.getElementById('folderModal').querySelector('.modal').appendChild(btn);
-  }
-  document.getElementById('folderModal').classList.add('open');
-}
-
-function closeFolderModal() {
-  document.getElementById('folderModal').classList.remove('open');
-  const btn = document.getElementById('folderDeleteBtn');
-  if (btn) btn.remove();
-}
-
-function renderColorPicker() {
-  const picker = document.getElementById('folderColorPicker');
-  picker.innerHTML = FOLDER_COLORS.map(c =>
-    `<div class="color-swatch${c === selectedColor ? ' selected' : ''}"
-      style="background:${c}"
-      onclick="selectColor('${c}')"></div>`
+function closeFolderAddModal(){ document.getElementById('folderAddModal').classList.remove('open'); }
+function renderAddColorPicker(){
+  document.getElementById('folderAddColorPicker').innerHTML=FOLDER_COLORS.map(c=>
+    `<div style="width:32px;height:32px;border-radius:50%;background:${c};cursor:pointer;border:3px solid ${c===addSelColor?'#1a1a1a':'transparent'};flex-shrink:0;" onclick="addSelColor='${c}';renderAddColorPicker()"></div>`
   ).join('');
 }
-
-function selectColor(c) {
-  selectedColor = c;
-  renderColorPicker();
+function saveFolderAdd(){
+  const name=document.getElementById('folderAddNameInput').value.trim();
+  if(!name){ alert('名前を入力してください'); return; }
+  folders.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),name,color:addSelColor});
+  saveAll(); closeFolderAddModal(); renderFolderGrid();
 }
 
-function saveFolder() {
-  const name = document.getElementById('folderNameInput').value.trim();
-  if (!name) { alert('名前を入力してください'); return; }
-  if (editingFolderId) {
-    const f = folders.find(x => x.id === editingFolderId);
-    if (f) { f.name = name; f.color = selectedColor; }
-  } else {
-    folders.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), name, color: selectedColor });
-  }
-  saveAll(); closeFolderModal(); renderFolderGrid();
-}
-
-function deleteFolder() {
-  if (!editingFolderId) return;
-  const f = folders.find(x => x.id === editingFolderId);
-  const count = plants.filter(p => p.folderId === editingFolderId).length;
-  const msg = count > 0
-    ? `「${f ? f.name : ''}」を削除すると中の植物${count}種類も削除されます。よろしいですか？`
-    : `「${f ? f.name : ''}」を削除しますか？`;
-  if (!confirm(msg)) return;
-  folders = folders.filter(x => x.id !== editingFolderId);
-  plants = plants.filter(p => p.folderId !== editingFolderId);
-  saveAll(); closeFolderModal(); renderFolderGrid();
-}
-
-// ===========================
+// =====================
 // 植物リスト
-// ===========================
-let editMode = false;
-let editingId = null;
-let croppedDataURL = null;
-let undoMap = {};
-const UNDO_SEC = 5;
-let longPressTimer = null;
-let longPressFired = false;
+// =====================
+let editMode=false, selectedCards=new Set();
+let undoMap={};
+const UNDO_SEC=5;
+let lpTimer=null, lpFired=false;
 
-function renderPlants() {
-  const list = document.getElementById('plantList');
-  const folderPlants = plants.filter(p => p.folderId === currentFolderId);
-  if (folderPlants.length === 0) {
-    list.innerHTML = `<div class="empty-msg">🌱<br><br>右上の「＋ 追加」を押して<br>植物を登録しましょう！</div>`;
-    return;
-  }
-  list.innerHTML = folderPlants.map(p => {
-    const d = daysSince(p.lastWatered);
-    const dateStr = formatDate(p.lastWatered);
-    const isUndo = !!undoMap[p.id];
-    const dateBadge = dateStr ? `<span class="badge">💧 ${dateStr}</span>` : '';
-    const dayBadge = d !== null ? `<span class="badge">${d === 0 ? '今日' : d + '日前'}</span>` : '';
-    const imgContent = p.img ? `<img src="${p.img}" alt="${p.name}">` : `<span>🌿</span>`;
-    const undoBar = isUndo ? `<div class="undo-bar" id="undoBar_${p.id}" style="width:100%"></div>` : '';
-    return `<div class="plant-card${p.lastWatered ? ' watered' : ''}${editMode ? ' edit-mode' : ''}"
+function renderPlants(){
+  const list=document.getElementById('plantList');
+  const fps=plants.filter(p=>p.folderId===currentFolderId);
+  if(!fps.length){ list.innerHTML=`<div class="empty-msg">🌱<br><br>右上の「＋ 追加」を押して<br>植物を登録しましょう！</div>`; return; }
+  const now=Date.now();
+  list.innerHTML=fps.map(p=>{
+    const d=daysSince(p.lastWatered);
+    const dateStr=formatDate(p.lastWatered);
+    const isUndo=!!undoMap[p.id];
+    const dateBadge=dateStr?`<span class="badge">💧 ${dateStr}</span>`:'';
+    const dayBadge=d!==null?`<span class="badge">${d===0?'今日':d+'日前'}</span>`:'';
+    const imgContent=p.img?`<img src="${p.img}" alt="">`:`<span>🌿</span>`;
+    const undoBar=isUndo?`<div class="undo-bar" id="undoBar_${p.id}" style="width:100%"></div>`:'';
+    // 水やりサイクルで色判定
+    const isOverdue=p.waterCycle&&p.lastWatered&&daysSince(p.lastWatered)>=p.waterCycle;
+    const isWatered=p.lastWatered&&!isOverdue;
+    const isSel=selectedCards.has(p.id);
+    const cbClass=isSel?'card-checkbox checked':'card-checkbox';
+    return `<div class="plant-card${isWatered?' watered':''}${editMode?' edit-mode':''}${isSel?' selected':''}"
       id="card_${p.id}"
-      onclick="if(!longPressFired) handleCardClick('${p.id}')"
-      oncontextmenu="handleLongPress(event,'${p.id}')"
-      ontouchstart="startLongPress(event,'${p.id}')"
-      ontouchend="cancelLongPress()"
-      ontouchmove="cancelLongPress()"
+      onclick="if(!lpFired) handleCardClick('${p.id}')"
+      oncontextmenu="handleCardCtx(event,'${p.id}')"
+      ontouchstart="startLP(event,'${p.id}')"
+      ontouchend="cancelLP()"
+      ontouchmove="cancelLP()"
       style="position:relative">
       <div class="plant-img">${imgContent}</div>
       <div class="plant-info">
-        <div class="plant-name">${escHtml(p.name || '名前未設定')}</div>
+        <div class="plant-name">${escHtml(p.name||'名前未設定')}</div>
         <div class="plant-badges">${dateBadge}${dayBadge}</div>
       </div>
       <button class="delete-btn" onclick="deletePlant(event,'${p.id}')">×</button>
+      <div class="${cbClass}" onclick="toggleSelect(event,'${p.id}')">✓</div>
       ${undoBar}
     </div>`;
   }).join('');
 
-  // undoバーアニメ
-  Object.keys(undoMap).forEach(id => {
-    const bar = document.getElementById('undoBar_' + id);
-    if (bar) {
-      const elapsed = (Date.now() - undoMap[id].startTime) / 1000;
-      const remaining = Math.max(0, UNDO_SEC - elapsed);
-      const pct = (remaining / UNDO_SEC) * 100;
-      bar.style.transition = 'none';
-      bar.style.width = pct + '%';
-      requestAnimationFrame(() => {
-        bar.style.transition = `width ${remaining}s linear`;
-        bar.style.width = '0%';
-      });
-    }
+  Object.keys(undoMap).forEach(id=>{
+    const bar=document.getElementById('undoBar_'+id);
+    if(bar){ const el=undoMap[id]; const rem=Math.max(0,UNDO_SEC-(Date.now()-el.startTime)/1000); const pct=(rem/UNDO_SEC)*100; bar.style.transition='none'; bar.style.width=pct+'%'; requestAnimationFrame(()=>{ bar.style.transition=`width ${rem}s linear`; bar.style.width='0%'; }); }
   });
 }
 
-function formatDate(ts) {
-  if (!ts) return null;
-  const d = new Date(ts);
-  return `${d.getMonth()+1}/${d.getDate()}`;
-}
-function daysSince(ts) {
-  if (!ts) return null;
-  return Math.floor((Date.now() - ts) / 86400000);
-}
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function formatDate(ts){ if(!ts) return null; const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()}`; }
+function daysSince(ts){ if(!ts) return null; return Math.floor((Date.now()-ts)/86400000); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// 長押し（植物カード）
-function startLongPress(e, id) {
-  longPressFired = false;
-  longPressTimer = setTimeout(() => {
-    longPressFired = true;
-    navigator.vibrate && navigator.vibrate(30);
-    openEditModal(id);
-  }, 600);
-}
-function cancelLongPress() { clearTimeout(longPressTimer); }
-function handleLongPress(e, id) { e.preventDefault(); openEditModal(id); }
+function startLP(e,id){ lpFired=false; lpTimer=setTimeout(()=>{ lpFired=true; navigator.vibrate&&navigator.vibrate(30); openEditModal(id); },600); }
+function cancelLP(){ clearTimeout(lpTimer); }
+function handleCardCtx(e,id){ e.preventDefault(); openEditModal(id); }
 
-function handleCardClick(id) {
-  if (editMode) { openEditModal(id); return; }
-  if (undoMap[id]) {
+function handleCardClick(id){
+  if(editMode){ toggleSelect(null,id); return; }
+  if(undoMap[id]){
     clearTimeout(undoMap[id].timer);
-    const prev = undoMap[id].prevWatered;
+    const prev=undoMap[id].prevWatered, prevHist=undoMap[id].prevHistory;
     delete undoMap[id];
-    const p = plants.find(x => x.id === id);
-    if (p) p.lastWatered = prev;
+    const p=plants.find(x=>x.id===id);
+    if(p){ p.lastWatered=prev; p.waterHistory=prevHist; }
     saveAll(); renderPlants(); return;
   }
-  const p = plants.find(x => x.id === id);
-  if (!p) return;
-  const prevWatered = p.lastWatered;
-  p.lastWatered = Date.now();
+  const p=plants.find(x=>x.id===id); if(!p) return;
+  const prevWatered=p.lastWatered;
+  const prevHistory=[...(p.waterHistory||[])];
+  const now=Date.now();
+  p.lastWatered=now;
+  if(!p.waterHistory) p.waterHistory=[];
+  p.waterHistory.push(now);
   saveAll(); renderPlants();
-  const card = document.getElementById('card_' + id);
-  if (card) { card.classList.add('rippling'); setTimeout(() => card.classList.remove('rippling'), 500); }
-  undoMap[id] = {
-    prevWatered, startTime: Date.now(),
-    timer: setTimeout(() => { delete undoMap[id]; renderPlants(); }, UNDO_SEC * 1000)
-  };
+  const card=document.getElementById('card_'+id);
+  if(card){ card.classList.add('rippling'); setTimeout(()=>card.classList.remove('rippling'),500); }
+  undoMap[id]={ prevWatered, prevHistory, startTime:Date.now(), timer:setTimeout(()=>{ delete undoMap[id]; renderPlants(); },UNDO_SEC*1000) };
   renderPlants();
 }
 
-function deletePlant(e, id) {
+function toggleSelect(e,id){
+  if(e) e.stopPropagation();
+  if(selectedCards.has(id)) selectedCards.delete(id); else selectedCards.add(id);
+  renderPlants();
+}
+
+function selectAll(){
+  const fps=plants.filter(p=>p.folderId===currentFolderId);
+  const allSel=fps.every(p=>selectedCards.has(p.id));
+  if(allSel) selectedCards.clear(); else fps.forEach(p=>selectedCards.add(p.id));
+  renderPlants();
+}
+
+function revertSelected(){
+  if(!selectedCards.size){ showToast('カードを選択してください'); return; }
+  selectedCards.forEach(id=>{
+    const p=plants.find(x=>x.id===id); if(!p) return;
+    if(!p.waterHistory||p.waterHistory.length===0){ p.lastWatered=null; return; }
+    if(p.waterHistory.length===1){ p.waterHistory=[]; p.lastWatered=null; return; }
+    p.waterHistory.pop();
+    p.lastWatered=p.waterHistory[p.waterHistory.length-1];
+  });
+  saveAll(); renderPlants();
+  showToast('選択したカードを1回前に戻しました');
+}
+
+function deletePlant(e,id){
   e.stopPropagation();
-  if (!confirm('この植物を削除しますか？')) return;
-  if (undoMap[id]) { clearTimeout(undoMap[id].timer); delete undoMap[id]; }
-  plants = plants.filter(x => x.id !== id);
+  if(!confirm('この植物を削除しますか？')) return;
+  if(undoMap[id]){ clearTimeout(undoMap[id].timer); delete undoMap[id]; }
+  plants=plants.filter(x=>x.id!==id);
+  selectedCards.delete(id);
   saveAll(); renderPlants();
 }
 
-function toggleEdit() {
-  editMode = !editMode;
-  const btn = document.getElementById('editBtn');
-  btn.classList.toggle('edit-active', editMode);
-  btn.textContent = editMode ? '完了' : '編集';
-  document.getElementById('editHint').style.display = editMode ? 'block' : 'none';
+function toggleEdit(){
+  editMode=!editMode;
+  const btn=document.getElementById('editBtn');
+  btn.classList.toggle('edit-active',editMode);
+  btn.textContent=editMode?'完了':'編集';
+  document.getElementById('editHint').style.display=editMode?'block':'none';
+  document.getElementById('editActionBar').classList.toggle('show',editMode);
+  if(!editMode) selectedCards.clear();
   renderPlants();
 }
 
-// ===========================
+// =====================
 // 植物モーダル
-// ===========================
-function openAddModal() {
-  editingId = null;
-  document.getElementById('modalTitle').textContent = '植物を追加';
-  document.getElementById('plantNameInput').value = '';
-  croppedDataURL = null;
-  renderImgArea();
-  document.getElementById('waterDateLabel').style.display = 'none';
-  document.getElementById('waterDateRow').style.display = 'none';
+// =====================
+let editingId=null, croppedDataURL=null, calYear=0, calMonth=0;
+
+function openAddModal(){
+  editingId=null;
+  document.getElementById('modalTitle').textContent='植物を追加';
+  document.getElementById('plantNameInput').value='';
+  croppedDataURL=null; renderImgArea();
+  document.getElementById('waterDateSection').style.display='none';
   document.getElementById('editModal').classList.add('open');
-  setTimeout(() => document.getElementById('plantNameInput').focus(), 300);
+  setTimeout(()=>document.getElementById('plantNameInput').focus(),300);
 }
 
-function openEditModal(id) {
-  editingId = id;
-  const p = plants.find(x => x.id === id);
-  if (!p) return;
-  document.getElementById('modalTitle').textContent = '植物を編集';
-  document.getElementById('plantNameInput').value = p.name || '';
-  croppedDataURL = p.img || null;
-  renderImgArea();
-  document.getElementById('waterDateLabel').style.display = 'block';
-  document.getElementById('waterDateRow').style.display = 'flex';
-  if (p.lastWatered) {
-    const d = new Date(p.lastWatered);
-    document.getElementById('waterDateInput').value =
-      `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  } else {
-    document.getElementById('waterDateInput').value = '';
+function openEditModal(id){
+  editingId=id;
+  const p=plants.find(x=>x.id===id); if(!p) return;
+  document.getElementById('modalTitle').textContent='植物を編集';
+  document.getElementById('plantNameInput').value=p.name||'';
+  croppedDataURL=p.img||null; renderImgArea();
+  document.getElementById('waterDateSection').style.display='block';
+  // 日付
+  if(p.lastWatered){
+    const d=new Date(p.lastWatered);
+    document.getElementById('waterDateInput').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  } else { document.getElementById('waterDateInput').value=''; }
+  // サイクル
+  document.getElementById('waterCycleInput').value=p.waterCycle||'';
+  // カレンダー
+  const now=new Date(); calYear=now.getFullYear(); calMonth=now.getMonth();
+  renderWaterCalendar(p);
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeModal(){ document.getElementById('editModal').classList.remove('open'); }
+
+function revertWaterDate(){
+  const p=plants.find(x=>x.id===editingId); if(!p) return;
+  if(!p.waterHistory||p.waterHistory.length<=1){
+    document.getElementById('waterDateInput').value='';
+    return;
   }
-  document.getElementById('editModal').classList.add('open');
+  const prev=p.waterHistory[p.waterHistory.length-2];
+  const d=new Date(prev);
+  document.getElementById('waterDateInput').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function closeModal() { document.getElementById('editModal').classList.remove('open'); }
+function clearCycle(){ document.getElementById('waterCycleInput').value=''; }
 
-function renderImgArea() {
-  const area = document.getElementById('imgUploadArea');
-  area.innerHTML = croppedDataURL
-    ? `<img src="${croppedDataURL}" alt=""><button class="img-delete-btn" onclick="deleteImg(event)">×</button>`
-    : '<span>📷<br>タップして<br>画像を選択</span>';
-}
-
-function imgAreaTapped() { if (!croppedDataURL) document.getElementById('imgFileInput').click(); }
-function deleteImg(e) { e.stopPropagation(); croppedDataURL = null; renderImgArea(); }
-function clearWaterDate() { document.getElementById('waterDateInput').value = ''; }
-
-function savePlant() {
-  const name = document.getElementById('plantNameInput').value.trim();
-  if (!name) { alert('名前を入力してください'); return; }
-  if (editingId) {
-    const p = plants.find(x => x.id === editingId);
-    if (p) {
-      p.name = name; p.img = croppedDataURL || null;
-      const dateVal = document.getElementById('waterDateInput').value;
-      if (dateVal) {
-        const d = new Date(dateVal); d.setHours(12,0,0,0);
-        p.lastWatered = d.getTime();
-      } else { p.lastWatered = null; }
-      if (undoMap[editingId]) { clearTimeout(undoMap[editingId].timer); delete undoMap[editingId]; }
-    }
+function savePlant(){
+  const name=document.getElementById('plantNameInput').value.trim();
+  if(!name){ alert('名前を入力してください'); return; }
+  if(editingId){
+    const p=plants.find(x=>x.id===editingId); if(!p) return;
+    p.name=name; p.img=croppedDataURL||null;
+    const dateVal=document.getElementById('waterDateInput').value;
+    if(dateVal){
+      const d=new Date(dateVal); d.setHours(12,0,0,0);
+      p.lastWatered=d.getTime();
+      // 履歴の最後を更新
+      if(!p.waterHistory) p.waterHistory=[];
+      if(p.waterHistory.length>0) p.waterHistory[p.waterHistory.length-1]=d.getTime();
+      else p.waterHistory=[d.getTime()];
+    } else { p.lastWatered=null; }
+    const cyc=parseInt(document.getElementById('waterCycleInput').value);
+    p.waterCycle=isNaN(cyc)||cyc<1?null:cyc;
+    if(undoMap[editingId]){ clearTimeout(undoMap[editingId].timer); delete undoMap[editingId]; }
   } else {
-    plants.push({
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-      folderId: currentFolderId, name, img: croppedDataURL || null, lastWatered: null
-    });
+    plants.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),folderId:currentFolderId,name,img:croppedDataURL||null,lastWatered:null,waterHistory:[],waterCycle:null});
   }
   saveAll(); renderPlants(); closeModal();
 }
 
-// ===========================
-// 画像クロップ
-// ===========================
-let cropImg = null, cropX = 0, cropY = 0, cropScale = 1;
-let isDragging = false, dragStart = {x:0,y:0}, imgStartPos = {x:0,y:0};
-let lastPinchDist = null;
-let cropTarget = 'plant'; // 'plant' or 'bg'
-
-function handleImgSelect(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => { cropTarget = 'plant'; openCropModal(ev.target.result); };
-  reader.readAsDataURL(file); e.target.value = '';
+function renderImgArea(){
+  const area=document.getElementById('imgUploadArea');
+  area.innerHTML=croppedDataURL
+    ?`<img src="${croppedDataURL}" alt=""><button class="img-delete-btn" onclick="deleteImg(event)">×</button>`
+    :'<span>📷<br>タップして<br>画像を選択</span>';
 }
+function imgAreaTapped(){ if(!croppedDataURL) document.getElementById('imgFileInput').click(); }
+function deleteImg(e){ e.stopPropagation(); croppedDataURL=null; renderImgArea(); }
 
-function handleBgSelect(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    settings.bgImg = ev.target.result;
-    renderBgUploadArea();
-    applyBg();
-  };
-  reader.readAsDataURL(file); e.target.value = '';
-}
-
-function openCropModal(src) {
-  cropImg = new Image();
-  cropImg.onload = () => {
-    const wrap = document.getElementById('cropWrap');
-    const size = wrap.offsetWidth || 300;
-    cropScale = size / Math.min(cropImg.width, cropImg.height);
-    cropX = 0; cropY = 0;
-    drawCrop();
-    document.getElementById('cropModal').classList.add('open');
-  };
-  cropImg.src = src;
-}
-
-function closeCropModal() { document.getElementById('cropModal').classList.remove('open'); }
-
-function drawCrop() {
-  const canvas = document.getElementById('cropCanvas');
-  const wrap = document.getElementById('cropWrap');
-  const size = wrap.offsetWidth || 300;
-  canvas.width = size; canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,size,size);
-  const iw = cropImg.width * cropScale, ih = cropImg.height * cropScale;
-  const cx = size/2 + cropX, cy = size/2 + cropY;
-  ctx.drawImage(cropImg, cx-iw/2, cy-ih/2, iw, ih);
-}
-
-function applyCrop() {
-  const canvas = document.getElementById('cropCanvas');
-  croppedDataURL = canvas.toDataURL('image/jpeg', 0.85);
-  renderImgArea();
-  closeCropModal();
-}
-
-const cw = document.getElementById('cropWrap');
-cw.addEventListener('mousedown', e => { isDragging=true; dragStart={x:e.clientX,y:e.clientY}; imgStartPos={x:cropX,y:cropY}; cw.style.cursor='grabbing'; });
-cw.addEventListener('mousemove', e => { if(!isDragging)return; cropX=imgStartPos.x+(e.clientX-dragStart.x); cropY=imgStartPos.y+(e.clientY-dragStart.y); drawCrop(); });
-cw.addEventListener('mouseup', ()=>{ isDragging=false; cw.style.cursor='grab'; });
-cw.addEventListener('mouseleave', ()=>{ isDragging=false; cw.style.cursor='grab'; });
-cw.addEventListener('wheel', e=>{ e.preventDefault(); cropScale=Math.max(0.1,Math.min(8,cropScale*(1-e.deltaY*0.001))); drawCrop(); },{passive:false});
-cw.addEventListener('touchstart', e=>{
-  if(e.touches.length===1){ isDragging=true; dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; imgStartPos={x:cropX,y:cropY}; lastPinchDist=null; }
-  else if(e.touches.length===2){ isDragging=false; lastPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); }
-},{passive:true});
-cw.addEventListener('touchmove', e=>{
-  if(e.touches.length===2){
-    const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-    if(lastPinchDist) cropScale=Math.max(0.1,Math.min(8,cropScale*dist/lastPinchDist));
-    lastPinchDist=dist; drawCrop(); return;
+// =====================
+// 水やり履歴カレンダー
+// =====================
+function renderWaterCalendar(p){
+  const cal=document.getElementById('waterCalendar');
+  const hist=new Set((p.waterHistory||[]).map(ts=>new Date(ts).toISOString().slice(0,10)));
+  const today=new Date().toISOString().slice(0,10);
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const monthNames=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let html=`<div class="water-cal-header">
+    <button class="water-cal-nav" onclick="shiftCal(-1)">‹</button>
+    <div class="water-cal-title">${calYear}年 ${monthNames[calMonth]}</div>
+    <button class="water-cal-nav" onclick="shiftCal(1)">›</button>
+  </div>
+  <div class="water-cal-grid">`;
+  DAY_NAMES.forEach(d=>{ html+=`<div class="water-cal-day-name">${d}</div>`; });
+  for(let i=0;i<firstDay;i++) html+=`<div class="water-cal-day empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isWatered=hist.has(dateStr);
+    const isToday=dateStr===today;
+    html+=`<div class="water-cal-day${isWatered?' watered':''}${isToday?' today':''}">${d}</div>`;
   }
-  if(!isDragging||e.touches.length!==1)return;
-  cropX=imgStartPos.x+(e.touches[0].clientX-dragStart.x); cropY=imgStartPos.y+(e.touches[0].clientY-dragStart.y); drawCrop();
-},{passive:true});
-cw.addEventListener('touchend', ()=>{ isDragging=false; lastPinchDist=null; });
+  html+='</div>';
+  cal.innerHTML=html;
+}
 
-// ===========================
+function shiftCal(dir){
+  calMonth+=dir;
+  if(calMonth<0){ calMonth=11; calYear--; }
+  if(calMonth>11){ calMonth=0; calYear++; }
+  const p=plants.find(x=>x.id===editingId);
+  if(p) renderWaterCalendar(p);
+}
+
+// =====================
+// 画像クロップ
+// =====================
+let cropImg=null, cropX=0, cropY=0, cropScale=1;
+let isDragging=false, dragStart={x:0,y:0}, imgStartPos={x:0,y:0}, lastPinchDist=null;
+
+function handleImgSelect(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>openCropModal(ev.target.result);
+  reader.readAsDataURL(file); e.target.value='';
+}
+function handleBgSelect(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ settings.bgImg=ev.target.result; renderBgUploadArea(); applyBg(); };
+  reader.readAsDataURL(file); e.target.value='';
+}
+function openCropModal(src){
+  cropImg=new Image();
+  cropImg.onload=()=>{
+    const wrap=document.getElementById('cropWrap'); const size=wrap.offsetWidth||300;
+    cropScale=size/Math.min(cropImg.width,cropImg.height); cropX=0; cropY=0;
+    drawCrop(); document.getElementById('cropModal').classList.add('open');
+  };
+  cropImg.src=src;
+}
+function closeCropModal(){ document.getElementById('cropModal').classList.remove('open'); }
+function drawCrop(){
+  const canvas=document.getElementById('cropCanvas'), wrap=document.getElementById('cropWrap');
+  const size=wrap.offsetWidth||300; canvas.width=size; canvas.height=size;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,size,size);
+  const iw=cropImg.width*cropScale, ih=cropImg.height*cropScale;
+  ctx.drawImage(cropImg,size/2+cropX-iw/2,size/2+cropY-ih/2,iw,ih);
+}
+function applyCrop(){
+  croppedDataURL=document.getElementById('cropCanvas').toDataURL('image/jpeg',0.85);
+  renderImgArea(); closeCropModal();
+}
+const cw=document.getElementById('cropWrap');
+cw.addEventListener('mousedown',e=>{ isDragging=true; dragStart={x:e.clientX,y:e.clientY}; imgStartPos={x:cropX,y:cropY}; cw.style.cursor='grabbing'; });
+cw.addEventListener('mousemove',e=>{ if(!isDragging)return; cropX=imgStartPos.x+(e.clientX-dragStart.x); cropY=imgStartPos.y+(e.clientY-dragStart.y); drawCrop(); });
+cw.addEventListener('mouseup',()=>{ isDragging=false; cw.style.cursor='grab'; });
+cw.addEventListener('mouseleave',()=>{ isDragging=false; cw.style.cursor='grab'; });
+cw.addEventListener('wheel',e=>{ e.preventDefault(); cropScale=Math.max(0.1,Math.min(8,cropScale*(1-e.deltaY*0.001))); drawCrop(); },{passive:false});
+cw.addEventListener('touchstart',e=>{ if(e.touches.length===1){ isDragging=true; dragStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; imgStartPos={x:cropX,y:cropY}; lastPinchDist=null; } else if(e.touches.length===2){ isDragging=false; lastPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); } },{passive:true});
+cw.addEventListener('touchmove',e=>{ if(e.touches.length===2){ const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); if(lastPinchDist) cropScale=Math.max(0.1,Math.min(8,cropScale*dist/lastPinchDist)); lastPinchDist=dist; drawCrop(); return; } if(!isDragging||e.touches.length!==1)return; cropX=imgStartPos.x+(e.touches[0].clientX-dragStart.x); cropY=imgStartPos.y+(e.touches[0].clientY-dragStart.y); drawCrop(); },{passive:true});
+cw.addEventListener('touchend',()=>{ isDragging=false; lastPinchDist=null; });
+
+// =====================
 // 設定ページ
-// ===========================
-const BG_COLORS = [
-  { color: '#ffffff', label: '白' },
-  { color: '#f5f0e8', label: 'ベージュ' },
-  { color: '#e8f5e0', label: '薄緑' },
-  { color: '#e0ecf5', label: '薄青' },
-  { color: '#f5e0ec', label: '薄ピンク' },
-  { color: '#2c2c2c', label: 'ダーク' },
-  { color: '#1a2e1a', label: '深緑' },
-  { color: '#1a1a2e', label: '深紺' },
-];
+// =====================
+const BG_COLORS=[{c:'#ffffff',l:'白'},{c:'#f5f0e8',l:'ベージュ'},{c:'#e8f5e0',l:'薄緑'},{c:'#e0ecf5',l:'薄青'},{c:'#f5e0ec',l:'薄ピンク'},{c:'#2c2c2c',l:'ダーク'},{c:'#1a2e1a',l:'深緑'},{c:'#1a1a2e',l:'深紺'}];
 
-function renderSettingsPage() {
-  document.getElementById('settingLocation').value = settings.location || '';
-  renderBgColorPicker();
-  renderBgUploadArea();
-  updateTextColorBtns();
+function renderSettingsPage(){
+  document.getElementById('settingLocation').value=settings.location||'';
+  renderBgColorPicker(); renderBgUploadArea(); updateTCBtns();
 }
-
-function renderBgColorPicker() {
-  const el = document.getElementById('bgColorPicker');
-  if (!el) return;
-  el.innerHTML = BG_COLORS.map(b =>
-    `<div onclick="selectBgColor('${b.color}')" style="width:40px;height:40px;border-radius:50%;background:${b.color};border:3px solid ${settings.bgColor === b.color ? '#406843' : '#ddd'};cursor:pointer;flex-shrink:0;transition:border-color 0.15s;"></div>`
-  ).join('');
+function renderBgColorPicker(){
+  const el=document.getElementById('bgColorPicker'); if(!el) return;
+  el.innerHTML=BG_COLORS.map(b=>`<div onclick="selectBgColor('${b.c}')" style="width:40px;height:40px;border-radius:50%;background:${b.c};border:3px solid ${settings.bgColor===b.c?'#406843':'#ddd'};cursor:pointer;flex-shrink:0;"></div>`).join('');
 }
-
-function selectBgColor(col) {
-  settings.bgColor = col;
-  renderBgColorPicker();
-  applyBg();
+function selectBgColor(col){ settings.bgColor=col; renderBgColorPicker(); applyBg(); }
+function renderBgUploadArea(){
+  const area=document.getElementById('bgUploadArea');
+  area.innerHTML=settings.bgImg
+    ?`<img src="${settings.bgImg}" alt=""><button class="bg-delete-btn" onclick="clearBgImg(event)">×</button>`
+    :'<span>📷 タップして画像を選択</span>';
 }
-
-function setTextColorMode(mode) {
-  settings.textColorMode = mode;
-  updateTextColorBtns();
-  applyTextColor();
-}
-
-function updateTextColorBtns() {
-  ['auto','white','black'].forEach(m => {
-    const btn = document.getElementById('textColorBtn_' + m);
-    if (!btn) return;
-    const active = (settings.textColorMode || 'auto') === m;
-    btn.style.borderColor = active ? '#406843' : '#ccc';
-    btn.style.background = active ? '#e8f5e0' : '#f5f5f5';
-    btn.style.color = active ? '#406843' : '#333';
-    btn.style.fontWeight = active ? '700' : '600';
+function clearBgImg(e){ if(e) e.stopPropagation(); settings.bgImg=null; saveAll(); renderBgUploadArea(); applyBg(); }
+function setTextColorMode(mode){ settings.textColorMode=mode; updateTCBtns(); applyTextColor(); }
+function updateTCBtns(){
+  ['auto','white','black'].forEach(m=>{
+    const btn=document.getElementById('tcBtn_'+m); if(!btn) return;
+    const active=(settings.textColorMode||'auto')===m;
+    btn.style.borderColor=active?'#406843':'#ccc';
+    btn.style.background=active?'#e8f5e0':'#f5f5f5';
+    btn.style.color=active?'#406843':'#333';
   });
 }
-
-function renderBgUploadArea() {
-  const area = document.getElementById('bgUploadArea');
-  if (settings.bgImg) {
-    area.innerHTML = `<img src="${settings.bgImg}" alt="背景"><button class="bg-delete-btn" onclick="clearBg(event)">×</button>`;
-  } else {
-    area.innerHTML = '<span>📷 タップして画像を選択</span>';
-  }
+function saveSettings(){
+  const loc=document.getElementById('settingLocation').value.trim();
+  if(loc) settings.location=loc;
+  saveAll(); showToast('設定を保存しました'); goTop(); fetchWeather(settings.location);
 }
 
-function saveSettings() {
-  const loc = document.getElementById('settingLocation').value.trim();
-  if (loc) settings.location = loc;
-  saveAll();
-  showToast('設定を保存しました');
-  goTop();
-  fetchWeather(settings.location);
-  applyBg();
-}
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
-function clearBg(e) {
-  if (e) e.stopPropagation();
-  settings.bgImg = null;
-  settings.bgColor = null;
-  saveAll();
-  renderBgUploadArea();
-  renderBgColorPicker();
-  applyBg();
-}
-
-// ===========================
+// =====================
 // 起動
-// ===========================
+// =====================
 loadData();
 applyBg();
 renderFolderGrid();
 fetchWeather(settings.location);
-// fetchWeather後にもapplyTextColor（DOM生成後）
-setTimeout(applyTextColor, 1500);
+setTimeout(applyTextColor,1500);
 </script>
 </body>
 </html>
