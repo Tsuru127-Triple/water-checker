@@ -71,7 +71,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .plant-card.edit-mode { outline:2px dashed rgba(255,255,255,0.6); }
 .plant-card.selected { outline:3px solid #fff; }
 .undo-bar { position:absolute; bottom:0; left:0; height:3px; background:rgba(255,255,255,0.7); border-radius:0 0 0 16px; }
-.plant-img { width:54px; height:72px; flex-shrink:0; border-radius:12px; background:rgba(255,255,255,0.2); border:none; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:32px; }
+.plant-img { width:96px; height:72px; flex-shrink:0; border-radius:12px; background:rgba(255,255,255,0.2); border:none; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:32px; }
 .plant-img img { width:100%; height:100%; object-fit:cover; display:block; }
 .plant-info { flex:1; min-width:0; }
 .plant-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -83,6 +83,14 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .edit-mode .card-checkbox { display:flex; }
 .edit-mode .delete-btn { display:none; }
 .card-checkbox.checked { background:#fff; color:#406843; }
+.card-order-badge { position:absolute; top:50%; left:14px; transform:translateY(-50%); width:36px; height:36px; border-radius:8px; background:#fff; color:#1a1a1a; border:none; font-size:15px; font-weight:700; display:none; align-items:center; justify-content:center; cursor:pointer; z-index:10; box-shadow:0 1px 4px rgba(0,0,0,0.15); }
+.edit-mode .card-order-badge { display:flex; }
+.order-input-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:600; }
+.order-input-box { background:#fff; border-radius:18px; padding:24px; width:220px; text-align:center; }
+.order-input-box p { font-size:14px; color:#666; margin-bottom:12px; }
+.order-input-box input { width:80px; font-size:24px; font-weight:700; text-align:center; border:2px solid #406843; border-radius:10px; padding:8px; outline:none; color:#1a1a1a; }
+.order-input-btns { display:flex; gap:8px; margin-top:16px; }
+.order-input-btns button { flex:1; padding:10px; border-radius:10px; border:none; font-size:14px; font-weight:600; cursor:pointer; }
 .edit-hint { text-align:center; font-size:12px; color:#aaa; padding:8px 0 0; }
 
 /* 編集バーアクション */
@@ -113,7 +121,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .modal input[type="text"] { width:100%; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none; }
 .modal input[type="text"]:focus { border-color:#406843; }
 .modal input[type="number"] { width:80px; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none; }
-.img-upload-area { width:120px; height:160px; border:2px dashed #ccc; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; margin:6px 0; position:relative; }
+.img-upload-area { width:160px; height:120px; border:2px dashed #ccc; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; margin:6px 0; position:relative; }
 .img-upload-area img { width:100%; height:100%; object-fit:cover; }
 .img-upload-area span { font-size:12px; color:#aaa; text-align:center; padding:12px; line-height:1.5; }
 .img-delete-btn { position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.55); color:#fff; border:none; cursor:pointer; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:10; }
@@ -136,7 +144,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 
 /* クロップ */
 .crop-modal { background:#fff; border-radius:24px 24px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); width:100%; max-width:480px; }
-.crop-canvas-wrap { width:100%; aspect-ratio:3/4; overflow:hidden; border-radius:14px; background:#222; cursor:grab; touch-action:none; }
+.crop-canvas-wrap { width:100%; aspect-ratio:4/3; overflow:hidden; border-radius:14px; background:#222; cursor:grab; touch-action:none; }
 .crop-canvas-wrap canvas { display:block; width:100%; height:100%; }
 .crop-hint { font-size:12px; color:#aaa; text-align:center; margin-top:8px; }
 
@@ -606,6 +614,7 @@ function renderPlants(){
     const isWatered=p.lastWatered&&!isOverdue;
     const isSel=selectedCards.has(p.id);
     const cbClass=isSel?'card-checkbox checked':'card-checkbox';
+    const orderNum=fps.indexOf(p)+1;
     return `<div class="plant-card${isWatered?' watered':''}${editMode?' edit-mode':''}${isSel?' selected':''}"
       id="card_${p.id}"
       onclick="if(!lpFired) handleCardClick('${p.id}')"
@@ -614,7 +623,8 @@ function renderPlants(){
       ontouchend="cancelLP()"
       ontouchmove="cancelLP()"
       style="position:relative">
-      <div class="plant-img">${imgContent}</div>
+      <button class="card-order-badge" onclick="openOrderInput(event,'${p.id}',${orderNum},${fps.length})">${orderNum}</button>
+      <div class="plant-img" style="${editMode?'margin-left:50px;':''}">${imgContent}</div>
       <div class="plant-info">
         <div class="plant-name">${escHtml(p.name||'名前未設定')}</div>
         <div class="plant-badges">${dateBadge}${dayBadge}</div>
@@ -687,6 +697,50 @@ function revertSelected(){
   });
   saveAll(); renderPlants();
   showToast('選択したカードを1回前に戻しました');
+}
+
+// 並べ替え
+function openOrderInput(e, id, currentOrder, total){
+  e.stopPropagation();
+  // オーバーレイ生成
+  const overlay=document.createElement('div');
+  overlay.className='order-input-overlay';
+  overlay.id='orderOverlay';
+  overlay.innerHTML=`<div class="order-input-box">
+    <p>${currentOrder}番 → 何番目に移動？</p>
+    <input type="number" id="orderInputVal" min="1" max="${total}" value="${currentOrder}" autofocus>
+    <div class="order-input-btns">
+      <button style="background:#f0f0f0;color:#666;" onclick="closeOrderInput()">キャンセル</button>
+      <button style="background:#406843;color:#fff;" onclick="applyOrder('${id}',${currentOrder})">移動</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=>{ const inp=document.getElementById('orderInputVal'); if(inp){ inp.focus(); inp.select(); } },100);
+}
+
+function closeOrderInput(){
+  const el=document.getElementById('orderOverlay');
+  if(el) el.remove();
+}
+
+function applyOrder(id, fromOrder){
+  const inp=document.getElementById('orderInputVal');
+  if(!inp) return;
+  const toOrder=parseInt(inp.value);
+  closeOrderInput();
+  const fps=plants.filter(p=>p.folderId===currentFolderId);
+  if(isNaN(toOrder)||toOrder<1||toOrder>fps.length||toOrder===fromOrder) return;
+  // fromOrderのplantを取り出して toOrder の位置に差し込む
+  const fromIdx=fromOrder-1;
+  const [moved]=fps.splice(fromIdx,1);
+  fps.splice(toOrder-1,0,moved);
+  // plantsのfolderId内の順序を反映（他フォルダのplantはそのまま）
+  const otherPlants=plants.filter(p=>p.folderId!==currentFolderId);
+  plants=[...otherPlants];
+  // 元のplants配列の順序でfpsを挿入（他フォルダの位置を保持しつつ）
+  // シンプルに: folderのplantsをfpsの順に置き換え
+  fps.forEach(p=>plants.push(p));
+  saveAll(); renderPlants();
 }
 
 function deletePlant(e,id){
@@ -849,8 +903,12 @@ function handleBgSelect(e){
 function openCropModal(src){
   cropImg=new Image();
   cropImg.onload=()=>{
-    const wrap=document.getElementById('cropWrap'); const size=wrap.offsetWidth||300;
-    cropScale=size/Math.min(cropImg.width,cropImg.height); cropX=0; cropY=0;
+    const wrap=document.getElementById('cropWrap');
+    const cw=wrap.offsetWidth||300;
+    const ch=wrap.offsetHeight||400;
+    // 画像がキャンバス全体を覆うよう大きい方のスケールで初期化
+    cropScale=Math.max(cw/cropImg.width, ch/cropImg.height);
+    cropX=0; cropY=0;
     drawCrop(); document.getElementById('cropModal').classList.add('open');
   };
   cropImg.src=src;
@@ -858,10 +916,12 @@ function openCropModal(src){
 function closeCropModal(){ document.getElementById('cropModal').classList.remove('open'); }
 function drawCrop(){
   const canvas=document.getElementById('cropCanvas'), wrap=document.getElementById('cropWrap');
-  const size=wrap.offsetWidth||300; canvas.width=size; canvas.height=size;
-  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,size,size);
+  const cw=wrap.offsetWidth||300;
+  const ch=wrap.offsetHeight||400;
+  canvas.width=cw; canvas.height=ch;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,cw,ch);
   const iw=cropImg.width*cropScale, ih=cropImg.height*cropScale;
-  ctx.drawImage(cropImg,size/2+cropX-iw/2,size/2+cropY-ih/2,iw,ih);
+  ctx.drawImage(cropImg,cw/2+cropX-iw/2,ch/2+cropY-ih/2,iw,ih);
 }
 function applyCrop(){
   croppedDataURL=document.getElementById('cropCanvas').toDataURL('image/jpeg',0.85);
