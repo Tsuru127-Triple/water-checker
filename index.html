@@ -53,7 +53,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .folder-section-title { font-size:11px; font-weight:700; color:var(--tc-sub,#999); margin-bottom:10px; letter-spacing:1.2px; }
 .folder-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .folder-btn { aspect-ratio:5/4; border-radius:18px; border:none; color:#fff; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:14px; position:relative; overflow:hidden; transition:transform 0.15s,filter 0.15s; -webkit-user-select:none; user-select:none; text-align:left; }
-.folder-btn::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.2); pointer-events:none; border-radius:18px; }
+.folder-btn::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.8); pointer-events:none; border-radius:18px; }
 .folder-btn:active { transform:scale(0.97); }
 .folder-btn.pressing { filter:brightness(1.2); }
 .folder-btn .folder-name { font-size:15px; font-weight:700; line-height:1.2; }
@@ -65,10 +65,10 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 /* 植物カード */
 .plant-list { padding:12px 12px 0; display:flex; flex-direction:column; gap:10px; }
 .empty-msg { text-align:center; padding:48px 24px; color:#aaa; font-size:14px; line-height:1.8; }
-.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,0.2); cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
+.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,0.8); cursor:pointer; transition:background s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
 .plant-card:active { transform:scale(0.98); }
-.plant-card.watered { background:rgba(115,191,230,0.2); }
-.plant-card.overdue { background:rgba(64,104,67,0.2); }
+.plant-card.watered { background:rgba(115,191,230,0.8); }
+.plant-card.overdue { background:rgba(64,104,67,0.8); }
 .plant-card.edit-mode { outline:2px dashed rgba(255,255,255,0.6); }
 .plant-card.selected { outline:3px solid #fff; }
 .undo-bar { position:absolute; bottom:0; left:0; height:3px; background:rgba(255,255,255,0.7); border-radius:0 0 0 16px; }
@@ -480,7 +480,7 @@ function renderFolderGrid(){
   const grid=document.getElementById('folderGrid');
   let html=folders.map(f=>{
     const count=plants.filter(p=>p.folderId===f.id).length;
-    const bgColor=hexToRgba(f.color||'#406843', 0.2);
+    const bgColor=hexToRgba(f.color||'#406843', 0.8);
     return `<button class="folder-btn" id="fb_${f.id}" style="background:${bgColor}"
       onclick="handleFolderClick('${f.id}')"
       oncontextmenu="handleFolderCtx(event,'${f.id}')"
