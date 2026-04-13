@@ -17,7 +17,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 #pageTop.active { display:flex; padding-bottom:0; }
 
 /* ヘッダー */
-.header { position:sticky; top:0; z-index:50; background:transparent; padding:16px 16px 12px; display:flex; align-items:center; justify-content:space-between; }
+.header { position:sticky; top:0; z-index:50; background:transparent; padding:32px 16px 12px; display:flex; align-items:center; justify-content:space-between; }
 .header-title { font-size:22px; font-weight:800; letter-spacing:-0.5px; color:var(--tc, #1a1a1a); }
 .header-btns { display:flex; gap:8px; align-items:center; }
 #pageTop .header { justify-content:center; position:relative; flex-shrink:0; }
@@ -53,7 +53,6 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .folder-section-title { font-size:11px; font-weight:700; color:var(--tc-sub,#999); margin-bottom:10px; letter-spacing:1.2px; }
 .folder-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .folder-btn { aspect-ratio:5/4; border-radius:18px; border:none; color:#fff; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:14px; position:relative; overflow:hidden; transition:transform 0.15s,filter 0.15s; -webkit-user-select:none; user-select:none; text-align:left; }
-.folder-btn::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.2); pointer-events:none; border-radius:18px; }
 .folder-btn:active { transform:scale(0.97); }
 .folder-btn.pressing { filter:brightness(1.2); }
 .folder-btn .folder-name { font-size:15px; font-weight:700; line-height:1.2; }
@@ -65,14 +64,14 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 /* 植物カード */
 .plant-list { padding:12px 12px 0; display:flex; flex-direction:column; gap:10px; }
 .empty-msg { text-align:center; padding:48px 24px; color:#aaa; font-size:14px; line-height:1.8; }
-.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,0.8); cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
+.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,1.0); cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
 .plant-card:active { transform:scale(0.98); }
-.plant-card.watered { background:rgba(115,191,230,0.8); }
-.plant-card.overdue { background:rgba(64,104,67,0.8); }
+.plant-card.watered { background:rgba(115,191,230,1.0); }
+.plant-card.overdue { background:rgba(64,104,67,1.0); }
 .plant-card.edit-mode { outline:2px dashed rgba(255,255,255,0.6); }
 .plant-card.selected { outline:3px solid #fff; }
 .undo-bar { position:absolute; bottom:0; left:0; height:3px; background:rgba(255,255,255,0.7); border-radius:0 0 0 16px; }
-.plant-img { width:72px; height:72px; flex-shrink:0; border-radius:12px; background:rgba(255,255,255,0.2); border:none; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:32px; }
+.plant-img { width:96px; height:72px; flex-shrink:0; border-radius:12px; background:rgba(255,255,255,0.2); border:none; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:32px; }
 .plant-img img { width:100%; height:100%; object-fit:cover; display:block; }
 .plant-info { flex:1; min-width:0; }
 .plant-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -80,7 +79,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .badge { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; background:rgba(255,255,255,0.25); color:#fff; }
 .delete-btn { position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.3); color:#fff; border:none; cursor:pointer; font-size:16px; font-weight:700; display:none; align-items:center; justify-content:center; line-height:1; }
 .edit-mode .delete-btn { display:flex; }
-.card-checkbox { position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,0.8); background:rgba(0,0,0,0.2); display:none; align-items:center; justify-content:center; font-size:13px; color:#fff; }
+.card-checkbox { position:absolute; top:50%; right:14px; transform:translateY(-50%); width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,0.8); background:rgba(0,0,0,0.2); display:none; align-items:center; justify-content:center; font-size:13px; color:#fff; }
 .edit-mode .card-checkbox { display:flex; }
 .edit-mode .delete-btn { display:none; }
 .card-checkbox.checked { background:#fff; color:#406843; }
@@ -114,7 +113,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .modal input[type="text"] { width:100%; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none; }
 .modal input[type="text"]:focus { border-color:#406843; }
 .modal input[type="number"] { width:80px; font-size:16px; padding:10px 14px; border-radius:12px; border:1.5px solid #ddd; background:#fafafa; color:#1a1a1a; outline:none; }
-.img-upload-area { width:140px; height:140px; border:2px dashed #ccc; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; margin:6px 0; position:relative; }
+.img-upload-area { width:160px; height:120px; border:2px dashed #ccc; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; margin:6px 0; position:relative; }
 .img-upload-area img { width:100%; height:100%; object-fit:cover; }
 .img-upload-area span { font-size:12px; color:#aaa; text-align:center; padding:12px; line-height:1.5; }
 .img-delete-btn { position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.55); color:#fff; border:none; cursor:pointer; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:10; }
@@ -137,7 +136,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 
 /* クロップ */
 .crop-modal { background:#fff; border-radius:24px 24px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); width:100%; max-width:480px; }
-.crop-canvas-wrap { width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:14px; background:#222; cursor:grab; touch-action:none; }
+.crop-canvas-wrap { width:100%; aspect-ratio:4/3; overflow:hidden; border-radius:14px; background:#222; cursor:grab; touch-action:none; }
 .crop-canvas-wrap canvas { display:block; width:100%; height:100%; }
 .crop-hint { font-size:12px; color:#aaa; text-align:center; margin-top:8px; }
 
@@ -480,7 +479,7 @@ function renderFolderGrid(){
   const grid=document.getElementById('folderGrid');
   let html=folders.map(f=>{
     const count=plants.filter(p=>p.folderId===f.id).length;
-    const bgColor=hexToRgba(f.color||'#406843', 0.8);
+    const bgColor=hexToRgba(f.color||'#406843', 1.0);
     return `<button class="folder-btn" id="fb_${f.id}" style="background:${bgColor}"
       onclick="handleFolderClick('${f.id}')"
       oncontextmenu="handleFolderCtx(event,'${f.id}')"
