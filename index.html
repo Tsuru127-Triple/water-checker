@@ -36,23 +36,24 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .top-fixed { flex-shrink:0; z-index:10; }
 .weather-section { padding:16px 16px 8px; }
 .weather-location { font-size:13px; color:var(--tc-sub,#666); margin-bottom:4px; }
-.weather-temp-big { font-size:120px; font-weight:800; line-height:1; letter-spacing:-1px; color:var(--tc,#1a1a1a); margin-bottom:12px; }
+.weather-temp-big { font-size:72px; font-weight:800; line-height:1; letter-spacing:-3px; color:var(--tc,#1a1a1a); margin-bottom:12px; }
 .week-calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px; }
-.day-col { display:flex; flex-direction:column; align-items:center; padding:10px 4px; border-radius:999px; border:1px solid var(--day-border,#e8e8e8); background:var(--day-bg,rgba(255,255,255,0.7)); gap:3px; }
+.day-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 4px; border-radius:999px; border:1px solid var(--day-border,#e8e8e8); background:var(--day-bg,rgba(255,255,255,0.7)); gap:3px; width:100%; }
 .day-col.today { background:#1a1a1a !important; border-color:#1a1a1a !important; }
-.day-col .day-name { font-size:10px; font-weight:600; color:var(--tc-sub,#888); }
+.day-col .day-name { font-size:10px; font-weight:600; color:var(--tc-sub,#888); text-align:center; width:100%; }
 .day-col.today .day-name { color:#aaa; }
-.day-col .day-hi { font-size:10px; font-weight:700; color:var(--tc,#1a1a1a); }
+.day-col .day-hi { font-size:12px; font-weight:700; color:var(--tc,#1a1a1a); text-align:center; width:100%; }
 .day-col.today .day-hi { color:#fff; }
-.day-col .day-lo { font-size:10px; color:var(--tc-sub,#888); }
+.day-col .day-lo { font-size:10px; color:var(--tc-sub,#888); text-align:center; width:100%; }
 .day-col.today .day-lo { color:#aaa; }
-.day-col .day-icon { font-size:14px; }
+.day-col .day-icon { font-size:14px; text-align:center; width:100%; }
 
 /* フォルダグリッド */
 .folder-scroll { flex:1; overflow-y:auto; padding:0 16px 40px; -webkit-overflow-scrolling:touch; }
 .folder-section-title { font-size:11px; font-weight:700; color:var(--tc-sub,#999); margin-bottom:10px; letter-spacing:1.2px; }
 .folder-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .folder-btn { aspect-ratio:5/4; border-radius:18px; border:none; color:#fff; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:14px; position:relative; overflow:hidden; transition:transform 0.15s,filter 0.15s; -webkit-user-select:none; user-select:none; text-align:left; }
+.folder-btn::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.2); pointer-events:none; border-radius:18px; }
 .folder-btn:active { transform:scale(0.97); }
 .folder-btn.pressing { filter:brightness(1.2); }
 .folder-btn .folder-name { font-size:15px; font-weight:700; line-height:1.2; }
@@ -64,10 +65,10 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 /* 植物カード */
 .plant-list { padding:12px 12px 0; display:flex; flex-direction:column; gap:10px; }
 .empty-msg { text-align:center; padding:48px 24px; color:#aaa; font-size:14px; line-height:1.8; }
-.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:#406843; cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; }
+.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,0.2); cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
 .plant-card:active { transform:scale(0.98); }
-.plant-card.watered { background:#73bfe6; }
-.plant-card.overdue { background:#406843; }
+.plant-card.watered { background:rgba(115,191,230,0.2); }
+.plant-card.overdue { background:rgba(64,104,67,0.2); }
 .plant-card.edit-mode { outline:2px dashed rgba(255,255,255,0.6); }
 .plant-card.selected { outline:3px solid #fff; }
 .undo-bar { position:absolute; bottom:0; left:0; height:3px; background:rgba(255,255,255,0.7); border-radius:0 0 0 16px; }
@@ -433,27 +434,14 @@ async function fetchWeather(loc){
     const sundayStr=sunday.toISOString().slice(0,10);
     const satStr=saturdayStr.toISOString().slice(0,10);
 
-    // 予報API（今日〜土曜）
-    const fUrl=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&current_weather=true&timezone=Asia%2FTokyo&forecast_days=7`;
+    // 予報API（past_days=6で今週日曜から取得）
+    const fUrl=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&current_weather=true&timezone=Asia%2FTokyo&forecast_days=7&past_days=6`;
     const fRes=await fetch(fUrl); const fData=await fRes.json();
     document.getElementById('weatherTempBig').textContent=`${Math.round(fData.current_weather.temperature)}°`;
 
     const wMap={};
     for(let i=0;i<fData.daily.time.length;i++){
       wMap[fData.daily.time[i]]={hi:Math.round(fData.daily.temperature_2m_max[i]),lo:Math.round(fData.daily.temperature_2m_min[i]),icon:WEATHER_ICONS[fData.daily.weathercode[i]]||'🌡'};
-    }
-
-    // 過去分が必要な場合（今日が日曜以外）
-    if(todayDow>0){
-      const yesterday=new Date(now); yesterday.setDate(now.getDate()-1);
-      const yStr=yesterday.toISOString().slice(0,10);
-      try{
-        const pUrl=`https://api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia%2FTokyo&start_date=${sundayStr}&end_date=${yStr}`;
-        const pRes=await fetch(pUrl); const pData=await pRes.json();
-        if(pData.daily) for(let i=0;i<pData.daily.time.length;i++){
-          wMap[pData.daily.time[i]]={hi:Math.round(pData.daily.temperature_2m_max[i]),lo:Math.round(pData.daily.temperature_2m_min[i]),icon:WEATHER_ICONS[pData.daily.weathercode[i]]||'🌡'};
-        }
-      }catch(e){}
     }
 
     // 日〜土を生成
@@ -482,11 +470,18 @@ const FOLDER_COLORS=['#406843','#2c5f7a','#7a3f2c','#5c3d7a','#7a6b2c','#2c7a5f'
 let folderLongPressTimer=null, folderPressFired=false;
 const FOLDER_LP_MS=700;
 
+function hexToRgba(hex, alpha){
+  const h=hex.replace('#','');
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function renderFolderGrid(){
   const grid=document.getElementById('folderGrid');
   let html=folders.map(f=>{
     const count=plants.filter(p=>p.folderId===f.id).length;
-    return `<button class="folder-btn" id="fb_${f.id}" style="background:${f.color||'#406843'}"
+    const bgColor=hexToRgba(f.color||'#406843', 0.2);
+    return `<button class="folder-btn" id="fb_${f.id}" style="background:${bgColor}"
       onclick="handleFolderClick('${f.id}')"
       oncontextmenu="handleFolderCtx(event,'${f.id}')"
       ontouchstart="startFolderLP(event,'${f.id}')"
