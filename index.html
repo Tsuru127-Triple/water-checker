@@ -65,10 +65,10 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 /* 植物カード */
 .plant-list { padding:12px 12px 0; display:flex; flex-direction:column; gap:10px; }
 .empty-msg { text-align:center; padding:48px 24px; color:#aaa; font-size:14px; line-height:1.8; }
-.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,); cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
+.plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,0.8); cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
 .plant-card:active { transform:scale(0.98); }
-.plant-card.watered { background:rgba(115,191,230,); }
-.plant-card.overdue { background:rgba(64,104,67,); }
+.plant-card.watered { background:rgba(115,191,230,0.8); }
+.plant-card.overdue { background:rgba(64,104,67,0.8); }
 .plant-card.edit-mode { outline:2px dashed rgba(255,255,255,0.6); }
 .plant-card.selected { outline:3px solid #fff; }
 .undo-bar { position:absolute; bottom:0; left:0; height:3px; background:rgba(255,255,255,0.7); border-radius:0 0 0 16px; }
