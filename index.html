@@ -69,6 +69,8 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .empty-msg { text-align:center; padding:48px 24px; color:#aaa; font-size:14px; line-height:1.8; }
 .plant-card { display:flex; align-items:center; gap:14px; padding:14px; border-radius:16px; border:none; background:rgba(64,104,67,1.0); cursor:pointer; transition:background 0.2s,transform 0.1s; position:relative; -webkit-user-select:none; user-select:none; overflow:hidden; backdrop-filter:blur(2px); }
 .plant-card:active { transform:scale(0.98); }
+.plant-card.pressing { filter:brightness(1.2); }
+.plant-card .plant-press-bar { position:absolute; bottom:0; left:0; height:4px; background:rgba(255,255,255,0.6); border-radius:0 0 0 16px; width:0%; transition:none; }
 .plant-card.watered { background:rgba(115,191,230,1.0); }
 .plant-card.overdue { background:rgba(64,104,67,1.0); }
 .plant-card.edit-mode { outline:2px dashed rgba(255,255,255,0.6); }
@@ -644,6 +646,7 @@ function renderPlants(){
       ontouchend="cancelLP()"
       ontouchmove="cancelLP()"
       style="position:relative">
+      <div class="plant-press-bar" id="ppb_${p.id}"></div>
       <button class="card-order-badge" onclick="openOrderInput(event,'${p.id}',${orderNum},${fps.length})">${orderNum}</button>
       <div class="plant-img" style="${editMode?'margin-left:50px;':''}">${imgContent}</div>
       <div class="plant-info">
@@ -666,8 +669,21 @@ function formatDate(ts){ if(!ts) return null; const d=new Date(ts); return `${d.
 function daysSince(ts){ if(!ts) return null; return Math.floor((Date.now()-ts)/86400000); }
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function startLP(e,id){ lpFired=false; lpTimer=setTimeout(()=>{ lpFired=true; navigator.vibrate&&navigator.vibrate(30); openEditModal(id); },600); }
-function cancelLP(){ clearTimeout(lpTimer); }
+let lpCurrentId=null;
+function startLP(e,id){
+  lpFired=false; lpCurrentId=id;
+  const bar=document.getElementById('ppb_'+id), card=document.getElementById('card_'+id);
+  if(bar){ bar.style.transition='none'; bar.style.width='0%'; requestAnimationFrame(()=>{ bar.style.transition=`width ${FOLDER_LP_MS}ms linear`; bar.style.width='100%'; }); }
+  if(card) card.classList.add('pressing');
+  lpTimer=setTimeout(()=>{ lpFired=true; navigator.vibrate&&navigator.vibrate(40); if(card) card.classList.remove('pressing'); openEditModal(id); },FOLDER_LP_MS);
+}
+function cancelLP(){
+  clearTimeout(lpTimer);
+  const bar=document.getElementById('ppb_'+lpCurrentId), card=document.getElementById('card_'+lpCurrentId);
+  if(bar){ bar.style.transition='none'; bar.style.width='0%'; }
+  if(card) card.classList.remove('pressing');
+  lpCurrentId=null;
+}
 function handleCardCtx(e,id){ e.preventDefault(); openEditModal(id); }
 
 function handleCardClick(id){
