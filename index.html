@@ -167,9 +167,14 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .color-swatch.selected { border-color:#1a1a1a; }
 
 /* フローティング戻るボタン */
-.float-back-btn { position:fixed; bottom:36px; right:24px; width:52px; height:52px; border-radius:50%; background:rgba(30,30,30,0.75); backdrop-filter:blur(8px); color:#fff; font-size:22px; border:none; cursor:pointer; display:none; align-items:center; justify-content:center; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.25); transition:transform 0.15s,background 0.15s; }
+.float-back-btn { position:fixed; bottom:36px; right:24px; width:52px; height:52px; border-radius:50%; background:rgba(30,30,30,0.75); backdrop-filter:blur(8px); color:#fff; font-size:22px; border:none; cursor:pointer; display:none; align-items:center; justify-content:center; z-index:400; box-shadow:0 4px 16px rgba(0,0,0,0.25); transition:transform 0.15s,background 0.15s; }
 .float-back-btn.show { display:flex; }
 .float-back-btn:active { transform:scale(0.92); background:rgba(30,30,30,0.95); }
+
+/* フローティング保存ボタン */
+.float-save-btn { position:fixed; bottom:100px; right:24px; width:52px; height:52px; border-radius:50%; background:#406843; color:#fff; font-size:26px; border:none; cursor:pointer; display:none; align-items:center; justify-content:center; z-index:400; box-shadow:0 4px 16px rgba(0,0,0,0.25); transition:transform 0.15s,background 0.15s; }
+.float-save-btn.show { display:flex; }
+.float-save-btn:active { transform:scale(0.92); background:#2f4f32; }
 
 /* トースト */
 .toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:#1a1a1a; color:#fff; padding:12px 20px; border-radius:20px; font-size:14px; font-weight:600; z-index:500; opacity:0; transition:opacity 0.3s; white-space:nowrap; pointer-events:none; }
@@ -182,6 +187,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 <body>
 <div id="bgLayer"></div>
 <div id="toast" class="toast"></div>
+<button class="float-save-btn" id="floatSaveBtn" onclick="savePlant()">✓</button>
 <button class="float-back-btn" id="floatBackBtn" onclick="goTop()">←</button>
 
 <!-- トップページ -->
@@ -280,10 +286,6 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
       <span>📷<br>タップして<br>画像を選択</span>
     </div>
     <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="handleImgSelect(event)">
-    <div class="modal-actions">
-      <button class="btn btn-cancel2" onclick="closeModal()">キャンセル</button>
-      <button class="btn green" onclick="savePlant()">保存する</button>
-    </div>
   </div>
 </div>
 
@@ -785,6 +787,19 @@ function toggleEdit(){
 // =====================
 let editingId=null, croppedDataURL=null, calYear=0, calMonth=0;
 
+function setModalFloatMode(active){
+  const backBtn=document.getElementById('floatBackBtn');
+  const saveBtn=document.getElementById('floatSaveBtn');
+  if(active){
+    backBtn.onclick=()=>closeModal();
+    backBtn.classList.add('show');
+    saveBtn.classList.add('show');
+  } else {
+    backBtn.onclick=()=>goTop();
+    saveBtn.classList.remove('show');
+  }
+}
+
 function openAddModal(){
   editingId=null;
   document.getElementById('modalTitle').textContent='植物を追加';
@@ -792,6 +807,7 @@ function openAddModal(){
   croppedDataURL=null; renderImgArea();
   document.getElementById('waterDateSection').style.display='none';
   document.getElementById('editModal').classList.add('open');
+  setModalFloatMode(true);
   setTimeout(()=>document.getElementById('plantNameInput').focus(),300);
 }
 
@@ -813,9 +829,10 @@ function openEditModal(id){
   const now=new Date(); calYear=now.getFullYear(); calMonth=now.getMonth();
   renderWaterCalendar(p);
   document.getElementById('editModal').classList.add('open');
+  setModalFloatMode(true);
 }
 
-function closeModal(){ document.getElementById('editModal').classList.remove('open'); }
+function closeModal(){ document.getElementById('editModal').classList.remove('open'); setModalFloatMode(false); }
 
 function revertWaterDate(){
   const p=plants.find(x=>x.id===editingId); if(!p) return;
