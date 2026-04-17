@@ -291,6 +291,10 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 <div class="folder-menu-overlay" id="folderMenuOverlay" onclick="handleModalOverlayClick(event,'folderMenuOverlay')">
   <div class="folder-menu" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button class="folder-menu-cancel" style="flex:1" onclick="closeFolderMenu()">キャンセル</button>
+      <button style="flex:1;padding:14px;border:none;border-radius:14px;background:#406843;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" onclick="folderMenuSave()">保存する</button>
+    </div>
     <div class="folder-menu-title" id="folderMenuTitle"></div>
     <div style="margin-bottom:12px;">
       <div style="font-size:13px;color:#406843;font-weight:600;margin-bottom:6px;">名前</div>
@@ -302,10 +306,6 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
     </div>
     <button class="folder-menu-item" onclick="folderMenuWater()">💧 一括水やり</button>
     <button class="folder-menu-item danger" onclick="folderMenuDelete()">🗑️ フォルダを削除</button>
-    <div style="display:flex;gap:10px;margin-top:8px;">
-      <button class="folder-menu-cancel" style="flex:1" onclick="closeFolderMenu()">キャンセル</button>
-      <button style="flex:1;padding:14px;border:none;border-radius:14px;background:#406843;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" onclick="folderMenuSave()">保存</button>
-    </div>
   </div>
 </div>
 
