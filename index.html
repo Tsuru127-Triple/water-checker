@@ -97,9 +97,10 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .edit-hint { text-align:center; font-size:12px; color:#aaa; padding:8px 0 0; }
 
 /* 編集バーアクション */
-.edit-action-bar { display:none; padding:10px 12px; gap:8px; background:rgba(255,255,255,0.95); border-top:1px solid #eee; position:sticky; bottom:0; z-index:20; }
+.edit-action-bar { display:none; padding:10px 12px; gap:8px; background:transparent; position:sticky; bottom:0; z-index:20; }
 .edit-action-bar.show { display:flex; }
-.edit-action-bar .btn { flex:1; text-align:center; }
+.edit-action-bar .btn { flex:1; text-align:center; background:rgba(255,255,255,0.5); border-color:rgba(200,200,200,0.5); backdrop-filter:blur(4px); }
+.edit-action-bar .btn.delete-btn-bar { background:rgba(255,80,80,0.45); border-color:rgba(255,80,80,0.4); color:#fff; }
 
 /* 設定 */
 .settings-section { padding:16px; }
@@ -229,6 +230,7 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
     <div id="editHint" class="edit-hint" style="display:none">カードをタップして編集・長押しで編集モーダル</div>
   </div>
   <div class="edit-action-bar" id="editActionBar">
+    <button class="btn delete-btn-bar" onclick="deleteSelected()">削除</button>
     <button class="btn" onclick="selectAll()">すべて選択</button>
     <button class="btn" onclick="revertSelected()">ひとつ前に戻す</button>
   </div>
@@ -703,6 +705,22 @@ function selectAll(){
   const allSel=fps.every(p=>selectedCards.has(p.id));
   if(allSel) selectedCards.clear(); else fps.forEach(p=>selectedCards.add(p.id));
   renderPlants();
+}
+
+function deleteSelected(){
+  if(!selectedCards.size){ showToast('カードを選択してください'); return; }
+  const names=plants.filter(p=>selectedCards.has(p.id)).map(p=>p.name||'名前未設定');
+  const msg=names.length===1
+    ?`「${names[0]}」を削除しますか？`
+    :`選択した${names.length}種類の植物を削除しますか？\n\n${names.join('、')}`;
+  if(!confirm(msg)) return;
+  selectedCards.forEach(id=>{
+    if(undoMap[id]){ clearTimeout(undoMap[id].timer); delete undoMap[id]; }
+    plants=plants.filter(x=>x.id!==id);
+  });
+  selectedCards.clear();
+  saveAll(); renderPlants();
+  showToast('削除しました');
 }
 
 function revertSelected(){
