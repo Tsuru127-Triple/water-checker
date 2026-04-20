@@ -55,8 +55,8 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 .folder-scroll { flex:1; overflow-y:auto; padding:0 16px 40px; -webkit-overflow-scrolling:touch; }
 .folder-section-title { font-size:11px; font-weight:700; color:var(--tc-sub,#999); margin-bottom:10px; letter-spacing:1.2px; }
 .folder-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.folder-btn { aspect-ratio:5/4; border-radius:18px; border:none; color:#fff; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:14px; position:relative; overflow:visible; transition:transform 0.15s,filter 0.15s; -webkit-user-select:none; user-select:none; text-align:left; }
-.folder-alert-badge { position:absolute; top:-9px; right:-9px; width:22px; height:22px; background:#e02020; color:#fff; border-radius:50%; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; z-index:10; border:2px solid #fff; pointer-events:none; line-height:1; }
+.folder-btn { aspect-ratio:5/4; border-radius:18px; border:none; color:#fff; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:14px; position:relative; overflow:hidden; transition:transform 0.15s,filter 0.15s; -webkit-user-select:none; user-select:none; text-align:left; }
+.folder-alert-badge { position:absolute; bottom:10px; right:10px; min-width:22px; height:22px; padding:0 5px; background:#ff6347; color:#fff; border-radius:11px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; z-index:10; pointer-events:none; line-height:1; }
 .folder-btn:active { transform:scale(0.97); }
 .folder-btn.pressing { filter:brightness(1.2); }
 .folder-btn .folder-name { font-size:15px; font-weight:700; line-height:1.2; }
@@ -507,12 +507,12 @@ function hexToRgba(hex, alpha){
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function folderHasAlert(folderId){
-  return plants.some(p=>{
+function folderGreenCount(folderId){
+  return plants.filter(p=>{
     if(p.folderId!==folderId) return false;
     const isOverdue=p.waterCycle&&p.lastWatered&&daysSince(p.lastWatered)>=p.waterCycle;
     return !(p.lastWatered&&!isOverdue);
-  });
+  }).length;
 }
 
 function renderFolderGrid(){
@@ -520,7 +520,8 @@ function renderFolderGrid(){
   let html=folders.map(f=>{
     const count=plants.filter(p=>p.folderId===f.id).length;
     const bgColor=hexToRgba(f.color||'#406843', 1.0);
-    const alert=count>0&&folderHasAlert(f.id)?`<div class="folder-alert-badge">!</div>`:'';
+    const greenCnt=folderGreenCount(f.id);
+    const alert=greenCnt>0?`<div class="folder-alert-badge">${greenCnt}</div>`:'';
     return `<button class="folder-btn" id="fb_${f.id}" style="background:${bgColor}"
       onclick="handleFolderClick('${f.id}')"
       oncontextmenu="handleFolderCtx(event,'${f.id}')"
