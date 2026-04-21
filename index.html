@@ -348,6 +348,42 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 
 <script>
 // =====================
+// IndexedDB（画像専用）
+// =====================
+let db=null;
+function initDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open('WaterAppDB',1);
+    req.onupgradeneeded=e=>{ e.target.result.createObjectStore('plantImages',{keyPath:'id'}); };
+    req.onsuccess=e=>{ db=e.target.result; resolve(db); };
+    req.onerror=e=>reject(e.target.error);
+  });
+}
+function saveImageToDB(id,imgData){
+  if(!db) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('plantImages','readwrite');
+    const store=tx.objectStore('plantImages');
+    imgData ? store.put({id,img:imgData}) : store.delete(id);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=e=>reject(e.target.error);
+  });
+}
+function getImageFromDB(id){
+  if(!db) return Promise.resolve(null);
+  return new Promise((resolve,reject)=>{
+    const req=db.transaction('plantImages','readonly').objectStore('plantImages').get(id);
+    req.onsuccess=e=>resolve(e.target.result?e.target.result.img:null);
+    req.onerror=e=>reject(e.target.error);
+  });
+}
+function deleteImageFromDB(id){
+  if(!db) return;
+  const tx=db.transaction('plantImages','readwrite');
+  tx.objectStore('plantImages').delete(id);
+}
+
+// =====================
 // データ
 // plants: [{id, folderId, name, img, lastWatered, waterHistory:[], waterCycle:null}]
 // folders: [{id, name, color}]
@@ -355,15 +391,27 @@ body { font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',s
 // =====================
 let folders=[], plants=[], settings={location:'Fukuoka', bgImg:null, bgColor:null, textColorMode:'auto'};
 
-function loadData(){
+async function loadData(){
+  await initDB();
   try{ folders=JSON.parse(localStorage.getItem('wc_folders')||'[]'); }catch(e){ folders=[]; }
   try{ plants=JSON.parse(localStorage.getItem('wc_plants3')||'[]'); }catch(e){ plants=[]; }
   try{ const s=JSON.parse(localStorage.getItem('wc_settings2')||'{}'); settings=Object.assign(settings,s); }catch(e){}
+  // 既存データ移行：localStorageにimgが残っていればIndexedDBへ移す
+  let migrated=false;
+  for(const p of plants){
+    if(p.img){ await saveImageToDB(p.id,p.img); p.img=null; migrated=true; }
+  }
+  if(migrated) localStorage.setItem('wc_plants3',JSON.stringify(plants));
+  // IndexedDBから画像を補完
+  await Promise.all(plants.map(async p=>{ p.img=await getImageFromDB(p.id); }));
 }
 function saveAll(){
   try{ localStorage.setItem('wc_folders',JSON.stringify(folders)); }catch(e){}
-  try{ localStorage.setItem('wc_plants3',JSON.stringify(plants)); }catch(e){}
+  // imgを除いてlocalStorageに保存
+  try{ localStorage.setItem('wc_plants3',JSON.stringify(plants.map(p=>({...p,img:null})))); }catch(e){}
   try{ localStorage.setItem('wc_settings2',JSON.stringify(settings)); }catch(e){}
+  // 画像はIndexedDBに非同期保存
+  plants.forEach(p=>saveImageToDB(p.id,p.img||null));
 }
 
 // =====================
@@ -594,8 +642,9 @@ function folderMenuWater(){
 function folderMenuDelete(){
   const id=menuFolderId; closeFolderMenu();
   const f=folders.find(x=>x.id===id);
-  const count=plants.filter(p=>p.folderId===id).length;
-  if(!confirm(count>0?`「${f?f.name:''}」を削除すると中の植物${count}種類も削除されます。よろしいですか？`:`「${f?f.name:''}」を削除しますか？`)) return;
+  const targets=plants.filter(p=>p.folderId===id);
+  if(!confirm(targets.length>0?`「${f?f.name:''}」を削除すると中の植物${targets.length}種類も削除されます。よろしいですか？`:`「${f?f.name:''}」を削除しますか？`)) return;
+  targets.forEach(p=>deleteImageFromDB(p.id));
   folders=folders.filter(x=>x.id!==id);
   plants=plants.filter(p=>p.folderId!==id);
   saveAll(); renderFolderGrid();
@@ -745,6 +794,7 @@ function deleteSelected(){
   selectedCards.forEach(id=>{
     if(undoMap[id]){ clearTimeout(undoMap[id].timer); delete undoMap[id]; }
     plants=plants.filter(x=>x.id!==id);
+    deleteImageFromDB(id);
   });
   selectedCards.clear();
   saveAll(); renderPlants();
@@ -814,6 +864,7 @@ function deletePlant(e,id){
   if(undoMap[id]){ clearTimeout(undoMap[id].timer); delete undoMap[id]; }
   plants=plants.filter(x=>x.id!==id);
   selectedCards.delete(id);
+  deleteImageFromDB(id);
   saveAll(); renderPlants();
 }
 
@@ -1059,11 +1110,14 @@ function showToast(msg){ const t=document.getElementById('toast'); t.textContent
 // =====================
 // 起動
 // =====================
-loadData();
-applyBg();
-renderFolderGrid();
-fetchWeather(settings.location);
-setTimeout(applyTextColor,1500);
+async function init(){
+  await loadData();
+  applyBg();
+  renderFolderGrid();
+  fetchWeather(settings.location);
+  setTimeout(applyTextColor,1500);
+}
+init();
 </script>
 </body>
 </html>
